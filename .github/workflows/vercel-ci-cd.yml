@@ -21,7 +21,6 @@ jobs:
       - run: npm run build
       - run: npm test || echo "Tests skipped (no test script)"
 
-  # Preview deployment for PRs to main
   deploy_preview:
     name: "Preview Deployment"
     if: github.event_name == 'pull_request' && github.base_ref == 'main'
@@ -29,11 +28,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npx vercel --token ${{ secrets.VERCEL_TOKEN }} --scope ${{ secrets.VERCEL_USERNAME }} --yes
+      - run: npx vercel@latest --token ${{ secrets.VERCEL_TOKEN }} --scope ${{ secrets.VERCEL_USERNAME }} --yes
         env:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-  # Production deployment for main branch
   deploy_prod:
     name: "Production Deployment"
     if: github.ref == 'refs/heads/main'
@@ -41,6 +39,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --scope ${{ secrets.VERCEL_USERNAME }} --yes
+      - run: npx vercel@latest --prod --token ${{ secrets.VERCEL_TOKEN }} --scope ${{ secrets.VERCEL_USERNAME }} --yes
         env:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
