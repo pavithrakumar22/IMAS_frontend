@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, develop]
   pull_request:
-    branches: [develop, main]  # Trigger checks for PRs to develop OR main
+    branches: [develop, main]
 
 jobs:
   integration:
@@ -19,9 +19,9 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
-      - run: npm test || echo "Tests skipped (no test script)"  # Graceful fallback
+      - run: npm test || echo "Tests skipped (no test script)"
 
-  # Preview deployment ONLY for PRs targeting main
+  # Preview deployment for PRs to main
   deploy_preview:
     name: "Preview Deployment"
     if: github.event_name == 'pull_request' && github.base_ref == 'main'
@@ -29,11 +29,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npx vercel --token ${{ secrets.VERCEL_TOKEN }} --yes
+      - run: npx vercel --token ${{ secrets.VERCEL_TOKEN }} --scope ${{ secrets.VERCEL_USERNAME }} --yes
         env:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-  # Production deployment ONLY after merge to main
+  # Production deployment for main branch
   deploy_prod:
     name: "Production Deployment"
     if: github.ref == 'refs/heads/main'
@@ -41,6 +41,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
+      - run: npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --scope ${{ secrets.VERCEL_USERNAME }} --yes
         env:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
