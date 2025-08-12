@@ -5,12 +5,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Stethoscope, Users, MessageSquare, TrendingUp, Clock, AlertTriangle, CheckCircle, Plus } from "lucide-react"
+import { api } from "@/lib/api";
 
 export default async function DashboardPage() {
   const user = await currentUser()
 
   if (!user) {
     redirect("/sign-in")
+  }
+
+  let backendUser = null
+  try {
+    backendUser = await api.getUser(user.id)
+  } catch (error) {
+    console.error("Failed to fetch user from backend:", error)
+    // Continue with Clerk user data if backend fails
   }
 
   const stats = [
@@ -75,6 +84,8 @@ export default async function DashboardPage() {
     },
   ]
 
+  const displayName = backendUser?.firstName || user.firstName || user.emailAddresses[0].emailAddress
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -90,9 +101,7 @@ export default async function DashboardPage() {
               </span>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
-                Welcome, {user.firstName || user.emailAddresses[0].emailAddress}
-              </span>
+              <span className="text-sm text-gray-600">Welcome, {displayName}</span>
               <UserButton />
             </div>
           </div>
@@ -105,6 +114,11 @@ export default async function DashboardPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
           <p className="text-gray-600">Monitor your medical cases and AI agent performance</p>
+          {backendUser && (
+            <p className="text-xs text-green-600 mt-1">
+              ✓ Synced with backend • Last updated: {new Date(backendUser.createdAt).toLocaleDateString()}
+            </p>
+          )}
         </div>
 
         {/* Stats Grid */}
