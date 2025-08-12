@@ -1,19 +1,15 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
-import { getHeader } from '@/lib/headers';
+import type React from "react"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
+import { ClerkProvider } from "@clerk/nextjs"
+import { UserSync } from "@/components/user-sync"
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"] })
 
-export async function generateMetadata(): Promise<Metadata> {
-  const csp = await getHeader('Content-Security-Policy');
-  
-  return {
-    title: "IMAS - Intelligent Medical Assistant System",
-    description: "Empowering rural healthcare providers with AI-driven medical guidance in local languages",
-    other: csp ? { 'Content-Security-Policy': csp } : {},
-  }
+export const metadata: Metadata = {
+  title: "IMAS - Intelligent Medical Assistant System",
+  description: "Empowering rural healthcare providers with AI-driven medical guidance in local languages",
 }
 
 export default function RootLayout({
@@ -24,7 +20,10 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className={inter.className}>{children}</body>
+        <body className={inter.className}>
+          <UserSync />
+          {children}
+        </body>
       </html>
     </ClerkProvider>
   )
