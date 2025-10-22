@@ -20,7 +20,7 @@ export function AppHeader() {
             <Link className="hover:text-foreground" href="/patients">
               Patients
             </Link>
-            <Link className="hover:text-foreground" href="/Chat">
+            <Link className="hover:text-foreground" href="/chat">
               New Case
             </Link>
           </nav>

@@ -120,12 +120,14 @@ export default async function HomePage() {
                   </Button>
                 </Link>
               ) : (
-                <Button
-                  size="lg"
-                  className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
-                >
-                  Access Dashboard <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
+                <Link href="/dashboard">
+                  <Button
+                    size="lg"
+                    className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
+                  >
+                    Access Dashboard <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
+                </Link>
               )}
               <Button size="lg" variant="outline">
                 Learn More

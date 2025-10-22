@@ -24,59 +24,117 @@ export async function GET() {
     const userData = await userResponse.json()
     const user = userData.user
 
-    // Sort patients by treatmentDate (most recent first)
+    // Sort patients by LasttreatmentDate (most recent first)
     const sortedPatients = user.patients?.sort((a, b) => 
-      new Date(b.treatmentDate || 0) - new Date(a.treatmentDate || 0)
+      new Date(b.LasttreatmentDate || 0) - new Date(a.LasttreatmentDate || 0)
     ) || [];
 
-    // Recent Cases = Most recent patients (using patients array)
-    const recentCases = sortedPatients.slice(0, 5).map((patient, index) => ({
-      id: patient.patientId || `CASE-${String(index + 1).padStart(3, '0')}`,
-      patient: patient.name || `Patient ${String.fromCharCode(65 + index)}`,
-      condition: patient.disease || "Condition not specified",
-      diagnosis: patient.diagnosis || "Diagnosis pending",
-      complexity: patient.complexity ? patient.complexity.charAt(0).toUpperCase() + patient.complexity.slice(1) : 'Not specified',
-      status: getStatusFromOutcome(patient.outcome),
-      time: patient.treatmentDate ? 
-        `${Math.abs(Math.floor((new Date() - new Date(patient.treatmentDate)) / (1000 * 60 * 60)))} hours ago` 
-        : "No treatment date",
-      outcome: patient.outcome ? patient.outcome.charAt(0).toUpperCase() + patient.outcome.slice(1) : 'Ongoing',
-      age: patient.age || 'Not specified',
-      treatmentDate: patient.treatmentDate ? new Date(patient.treatmentDate).toLocaleDateString() : 'Not specified'
-    }));
-
-    // Overall History = All patients formatted for history view
-    const overallHistory = sortedPatients.map(patient => ({
-      date: patient.treatmentDate ? new Date(patient.treatmentDate).toISOString().split('T')[0] : "Unknown date",
-      patient: patient.name || "Unknown Patient",
-      summary: `${patient.disease || "Condition"} - ${patient.diagnosis || "No diagnosis"}`,
-      outcome: patient.outcome ? patient.outcome.charAt(0).toUpperCase() + patient.outcome.slice(1) : "Ongoing",
-      complexity: patient.complexity ? patient.complexity.charAt(0).toUpperCase() + patient.complexity.slice(1) : 'Not specified'
-    }));
-
-    // Calculate real stats from patient data
+    // Calculate stats from your actual data
     const totalPatients = sortedPatients.length;
-    const successfulCases = sortedPatients.filter(p => p.outcome === 'cured').length;
-    const improvedCases = sortedPatients.filter(p => p.outcome === 'improved').length;
-    const referredCases = sortedPatients.filter(p => p.outcome === 'referred').length;
-    const ongoingCases = sortedPatients.filter(p => p.outcome === 'ongoing').length;
-    
+    const successfulCases = user.successfulCases || 0;
+    const successRate = user.successRate || 0;
+
     // Calculate complexity distribution
-    const lowComplexityCases = sortedPatients.filter(p => p.complexity === 'low').length;
-    const mediumComplexityCases = sortedPatients.filter(p => p.complexity === 'medium').length;
-    const highComplexityCases = sortedPatients.filter(p => p.complexity === 'high').length;
+    let lowComplexityCases = 0;
+    let mediumComplexityCases = 0;
+    let highComplexityCases = 0;
 
-    const successRate = totalPatients > 0 ? Math.round((successfulCases / totalPatients) * 100) : 0;
+    sortedPatients.forEach(patient => {
+      // Check diseases array first, then fall back to Lastcomplexity
+      if (patient.diseases && patient.diseases.length > 0) {
+        patient.diseases.forEach(disease => {
+          if (disease.complexity === 'low') lowComplexityCases++;
+          else if (disease.complexity === 'medium') mediumComplexityCases++;
+          else if (disease.complexity === 'high') highComplexityCases++;
+        });
+      } else {
+        // Use legacy complexity field
+        if (patient.Lastcomplexity === 'low') lowComplexityCases++;
+        else if (patient.Lastcomplexity === 'medium') mediumComplexityCases++;
+        else if (patient.Lastcomplexity === 'high') highComplexityCases++;
+      }
+    });
 
-    // Build payload using ONLY data from MongoDB patients array
+    // Calculate outcome distribution
+    let patientsCured = 0;
+    let patientsImproved = 0;
+    let patientsReferred = 0;
+    let patientsOngoing = 0;
+
+    sortedPatients.forEach(patient => {
+      // Check diseases array first, then fall back to Lastoutcome
+      if (patient.diseases && patient.diseases.length > 0) {
+        patient.diseases.forEach(disease => {
+          if (disease.outcome === 'cured') patientsCured++;
+          else if (disease.outcome === 'improved') patientsImproved++;
+          else if (disease.outcome === 'referred') patientsReferred++;
+          else if (disease.outcome === 'ongoing') patientsOngoing++;
+        });
+      } else {
+        // Use legacy outcome field
+        if (patient.Lastoutcome === 'cured') patientsCured++;
+        else if (patient.Lastoutcome === 'improved') patientsImproved++;
+        else if (patient.Lastoutcome === 'referred') patientsReferred++;
+        else if (patient.Lastoutcome === 'ongoing') patientsOngoing++;
+      }
+    });
+
+    // Recent Cases - using your actual patient data
+    const recentCases = sortedPatients.slice(0, 5).map((patient, index) => {
+      const primaryDisease = patient.diseases && patient.diseases.length > 0 
+        ? patient.diseases[patient.diseases.length - 1] // Get most recent disease
+        : {
+            name: patient.Lastdisease,
+            diagnosis: patient.Lastdiagnosis,
+            outcome: patient.Lastoutcome,
+            complexity: patient.Lastcomplexity,
+            treatmentDate: patient.LasttreatmentDate
+          };
+
+      return {
+        id: patient.patientId,
+        patient: patient.name,
+        condition: primaryDisease?.name || "Condition not specified",
+        diagnosis: primaryDisease?.diagnosis || "Diagnosis pending",
+        complexity: formatComplexity(primaryDisease?.complexity),
+        status: getStatusFromOutcome(primaryDisease?.outcome),
+        time: formatTimeAgo(primaryDisease?.treatmentDate || patient.LasttreatmentDate),
+        outcome: formatOutcome(primaryDisease?.outcome),
+        age: patient.age,
+        treatmentDate: formatDate(primaryDisease?.treatmentDate || patient.LasttreatmentDate)
+      };
+    });
+
+    // Overall History
+    const overallHistory = sortedPatients.map(patient => {
+      const primaryDisease = patient.diseases && patient.diseases.length > 0 
+        ? patient.diseases[patient.diseases.length - 1]
+        : {
+            name: patient.Lastdisease,
+            diagnosis: patient.Lastdiagnosis,
+            outcome: patient.Lastoutcome,
+            complexity: patient.Lastcomplexity,
+            treatmentDate: patient.LasttreatmentDate
+          };
+
+      return {
+        date: formatDate(primaryDisease?.treatmentDate || patient.LasttreatmentDate),
+        patient: patient.name,
+        summary: `${primaryDisease?.name || "Condition"} - ${primaryDisease?.diagnosis?.substring(0, 50) || "No diagnosis"}...`,
+        outcome: formatOutcome(primaryDisease?.outcome),
+        complexity: formatComplexity(primaryDisease?.complexity)
+      };
+    });
+
+    // Build final payload
     const payload = {
       stats: {
-        patientsCured: successfulCases,
-        patientsImproved: improvedCases,
-        patientsReferred: referredCases,
-        patientsOngoing: ongoingCases,
+        patientsCured: patientsCured,
+        patientsImproved: patientsImproved,
+        patientsReferred: patientsReferred,
+        patientsOngoing: patientsOngoing,
         experienceYears: user.experienceYears || 0,
-        successRate: successRate,
+        successRate: Math.round(successRate),
         totalPatients: totalPatients,
         lowComplexityCases: lowComplexityCases,
         mediumComplexityCases: mediumComplexityCases,
@@ -92,17 +150,18 @@ export async function GET() {
         { name: "Response Simplification", status: "Active" },
       ],
       patients: sortedPatients.map(patient => ({
-        id: patient.patientId || `P-${Math.random().toString(36).substr(2, 9)}`,
-        name: patient.name || "Unknown",
-        age: patient.age || null,
-        disease: patient.disease || "Not specified",
-        diagnosis: patient.diagnosis || "Pending",
-        lastVisit: patient.treatmentDate ? new Date(patient.treatmentDate).toISOString().split('T')[0] : "Never",
-        cases: 1,
-        resolved: patient.outcome === 'cured' ? 1 : 0,
-        outcome: patient.outcome ? patient.outcome.charAt(0).toUpperCase() + patient.outcome.slice(1) : "Ongoing",
-        complexity: patient.complexity ? patient.complexity.charAt(0).toUpperCase() + patient.complexity.slice(1) : 'Not specified',
-        treatmentDate: patient.treatmentDate ? new Date(patient.treatmentDate).toLocaleDateString() : 'Not specified'
+        id: patient.patientId,
+        name: patient.name,
+        age: patient.age,
+        disease: patient.Lastdisease || "Not specified",
+        diagnosis: patient.Lastdiagnosis || "Pending",
+        lastVisit: formatDate(patient.LasttreatmentDate),
+        cases: patient.diseases?.length || 1,
+        resolved: (patient.Lastoutcome === 'cured') ? 1 : 0,
+        outcome: formatOutcome(patient.Lastoutcome),
+        complexity: formatComplexity(patient.Lastcomplexity),
+        treatmentDate: formatDate(patient.LasttreatmentDate),
+        totalDiseases: patient.diseases?.length || 1
       })),
       userProfile: {
         displayName: user.displayName,
@@ -127,7 +186,7 @@ export async function GET() {
   }
 }
 
-// Helper function to convert outcome to status
+// Helper functions
 function getStatusFromOutcome(outcome) {
   switch (outcome) {
     case 'cured':
@@ -142,7 +201,24 @@ function getStatusFromOutcome(outcome) {
   }
 }
 
+function formatOutcome(outcome) {
+  if (!outcome) return 'Ongoing';
+  return outcome.charAt(0).toUpperCase() + outcome.slice(1);
+}
 
+function formatComplexity(complexity) {
+  if (!complexity) return 'Not specified';
+  return complexity.charAt(0).toUpperCase() + complexity.slice(1);
+}
 
+function formatTimeAgo(dateString) {
+  if (!dateString) return "No treatment date";
+  const date = new Date(dateString);
+  const hours = Math.abs(Math.floor((new Date() - date) / (1000 * 60 * 60)));
+  return `${hours} hours ago`;
+}
 
-
+function formatDate(dateString) {
+  if (!dateString) return "Not specified";
+  return new Date(dateString).toLocaleDateString();
+}

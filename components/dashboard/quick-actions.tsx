@@ -16,7 +16,7 @@ export function QuickActions() {
         <Button
           className="w-full justify-start bg-transparent"
           variant="outline"
-          onClick={() => router.push("/Chat")}
+          onClick={() => router.push("/chat")}
           aria-label="Start a new case"
         >
           <MessageSquare className="mr-2 h-4 w-4" />
