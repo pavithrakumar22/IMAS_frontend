@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Clock, CheckCircle2, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react"
 import type { CaseItem } from "@/hooks/use-user-data"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 export function RecentCases({ cases }: { cases: CaseItem[] }) {
   const [visibleCount, setVisibleCount] = useState(3)
+  const router = useRouter()
   
   const visibleCases = cases.slice(0, visibleCount)
   const hasMoreCases = cases.length > visibleCount
@@ -20,6 +22,21 @@ export function RecentCases({ cases }: { cases: CaseItem[] }) {
 
   const showLess = () => {
     setVisibleCount(3)
+  }
+
+  const handlePatientClick = (caseItem: CaseItem) => {
+    // Prepare URL parameters for the medical form in /chat page
+    console.log('Patient clicked:', caseItem)
+    const params = new URLSearchParams({
+      name: caseItem.patient || '',
+      disease: caseItem.condition || '',
+      ...(caseItem.age && { age: caseItem.age.toString() }),
+      ...(caseItem.gender && { gender: caseItem.gender }),
+      autoSubmit: 'false' // Just pre-fill, don't auto-submit
+    })
+
+    // Redirect to /chat page with patient data as URL parameters
+    router.push(`/chat?${params.toString()}`)
   }
 
   return (
@@ -49,11 +66,21 @@ export function RecentCases({ cases }: { cases: CaseItem[] }) {
             {visibleCases.map((c) => (
               <li 
                 key={c.id} 
-                className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50"
+                className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50 cursor-pointer"
+                onClick={() => handlePatientClick(c)}
               >
                 <div className="min-w-0 flex-1">
                   <div className="mb-2 flex items-center gap-3">
-                    <span className="font-medium text-sm truncate max-w-[120px]">{c.id}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation() // Prevent triggering the parent click
+                        handlePatientClick(c)
+                      }}
+                      className="font-medium text-sm truncate max-w-[120px] hover:text-blue-600 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-1 py-0.5 transition-colors"
+                      title="Click to chat with this patient"
+                    >
+                      {c.id}
+                    </button>
                     <Badge
                       variant={
                         c.complexity === "High" ? "destructive" : 
@@ -72,9 +99,14 @@ export function RecentCases({ cases }: { cases: CaseItem[] }) {
                   </p>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>{c.time}</span>
-                    {c.age && (
-                      <span>Age: {c.age}</span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {c.age && (
+                        <span>Age: {c.age}</span>
+                      )}
+                      {c.gender && (
+                        <span>Gender: {c.gender}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="ml-4 flex flex-col items-center gap-2 min-w-[100px]">

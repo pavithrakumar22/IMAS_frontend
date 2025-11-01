@@ -1,9 +1,10 @@
 "use client"
 
+import type React from "react"
+
 import { User, Calendar, Stethoscope, ArrowUpDown, Eye, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { PatientData } from "./types"
+import type { PatientData } from "./type"
 
 interface PatientsTableProps {
   patients: PatientData[]
@@ -15,46 +16,47 @@ interface PatientsTableProps {
   onViewHistory: (patient: PatientData) => void
 }
 
-export function PatientsTable({ 
-  patients, 
-  loadingPatient, 
-  selectedPatient, 
-  sortBy, 
-  sortOrder, 
-  onSort, 
-  onViewHistory 
+export function PatientsTable({
+  patients,
+  loadingPatient,
+  selectedPatient,
+  sortBy,
+  sortOrder,
+  onSort,
+  onViewHistory,
 }: PatientsTableProps) {
-  
-  const getOutcomeVariant = (outcome: string) => {
+  const getOutcomeColor = (outcome: string) => {
     switch (outcome.toLowerCase()) {
-      case 'cured': return 'default'
-      case 'improved': return 'secondary'
-      case 'ongoing': return 'outline'
-      case 'referred': return 'destructive'
-      default: return 'outline'
+      case "cured":
+        return "bg-green-100 text-green-800 border border-green-200"
+      case "improved":
+        return "bg-blue-100 text-blue-800 border border-blue-200"
+      case "ongoing":
+        return "bg-gray-100 text-gray-800 border border-gray-200"
+      case "referred":
+        return "bg-yellow-100 text-yellow-800 border border-yellow-200"
+      default:
+        return "bg-gray-100 text-gray-800 border border-gray-200"
     }
   }
 
-  const getComplexityVariant = (complexity: string) => {
+  const getComplexityColor = (complexity: string) => {
     switch (complexity.toLowerCase()) {
-      case 'high': return 'destructive'
-      case 'medium': return 'default'
-      case 'low': return 'secondary'
-      default: return 'outline'
+      case "high":
+        return "bg-red-100 text-red-800 border border-red-200"
+      case "medium":
+        return "bg-orange-100 text-orange-800 border border-orange-200"
+      case "low":
+        return "bg-green-100 text-green-800 border border-green-200"
+      default:
+        return "bg-gray-100 text-gray-800 border border-gray-200"
     }
   }
 
   const SortButton = ({ column, children }: { column: typeof sortBy; children: React.ReactNode }) => (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={() => onSort(column)}
-      className="flex items-center gap-1 h-8 px-2"
-    >
+    <Button variant="ghost" size="sm" onClick={() => onSort(column)} className="flex items-center gap-1 h-8 px-2">
       {children}
-      <ArrowUpDown className={`h-3 w-3 ${
-        sortBy === column ? 'text-primary' : 'text-muted-foreground'
-      }`} />
+      <ArrowUpDown className={`h-3 w-3 ${sortBy === column ? "text-primary" : "text-muted-foreground"}`} />
     </Button>
   )
 
@@ -72,34 +74,20 @@ export function PatientsTable({
     <div className="rounded-md border">
       <div className="grid grid-cols-12 gap-4 p-4 bg-muted/50 border-b font-medium text-sm">
         <div className="col-span-3">
-          <SortButton column="name">
-            Patient
-          </SortButton>
+          <SortButton column="name">Patient</SortButton>
         </div>
         <div className="col-span-1 text-center">
-          <SortButton column="age">
-            Age
-          </SortButton>
+          <SortButton column="age">Age</SortButton>
         </div>
+        <div className="col-span-2 text-center">Status</div>
+        <div className="col-span-2 text-center">Complexity</div>
         <div className="col-span-2 text-center">
-          Status
-        </div>
-        <div className="col-span-2 text-center">
-          Complexity
-        </div>
-        <div className="col-span-2 text-center">
-          <SortButton column="lastVisit">
-            Last Visit
-          </SortButton>
+          <SortButton column="lastVisit">Last Visit</SortButton>
         </div>
         <div className="col-span-1 text-center">
-          <SortButton column="cases">
-            Cases
-          </SortButton>
+          <SortButton column="cases">Cases</SortButton>
         </div>
-        <div className="col-span-1 text-center">
-          Actions
-        </div>
+        <div className="col-span-1 text-center">Actions</div>
       </div>
 
       <div className="divide-y">
@@ -125,15 +113,19 @@ export function PatientsTable({
             </div>
 
             <div className="col-span-2 text-center">
-              <Badge variant={getOutcomeVariant(patient.outcome)}>
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-medium capitalize inline-block ${getOutcomeColor(patient.outcome)}`}
+              >
                 {patient.outcome}
-              </Badge>
+              </span>
             </div>
 
             <div className="col-span-2 text-center">
-              <Badge variant={getComplexityVariant(patient.complexity)}>
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-medium capitalize inline-block ${getComplexityColor(patient.complexity)}`}
+              >
                 {patient.complexity}
-              </Badge>
+              </span>
             </div>
 
             <div className="col-span-2 text-center">
@@ -148,9 +140,7 @@ export function PatientsTable({
                 <Stethoscope className="h-4 w-4 text-muted-foreground" />
                 <span className="font-medium">{patient.cases}</span>
               </div>
-              <div className="text-xs text-muted-foreground">
-                {patient.resolved} resolved
-              </div>
+              <div className="text-xs text-muted-foreground">{patient.resolved} resolved</div>
             </div>
 
             <div className="col-span-1 text-center">

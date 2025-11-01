@@ -101,6 +101,7 @@ export async function GET() {
         time: formatTimeAgo(primaryDisease?.treatmentDate || patient.LasttreatmentDate),
         outcome: formatOutcome(primaryDisease?.outcome),
         age: patient.age,
+        gender: patient.gender || "Not specified", // Add gender field
         treatmentDate: formatDate(primaryDisease?.treatmentDate || patient.LasttreatmentDate)
       };
     });
@@ -122,7 +123,8 @@ export async function GET() {
         patient: patient.name,
         summary: `${primaryDisease?.name || "Condition"} - ${primaryDisease?.diagnosis?.substring(0, 50) || "No diagnosis"}...`,
         outcome: formatOutcome(primaryDisease?.outcome),
-        complexity: formatComplexity(primaryDisease?.complexity)
+        complexity: formatComplexity(primaryDisease?.complexity),
+        gender: patient.gender || "Not specified" // Add gender field
       };
     });
 
@@ -153,6 +155,7 @@ export async function GET() {
         id: patient.patientId,
         name: patient.name,
         age: patient.age,
+        gender: patient.gender || "Not specified", // Add gender field
         disease: patient.Lastdisease || "Not specified",
         diagnosis: patient.Lastdiagnosis || "Pending",
         lastVisit: formatDate(patient.LasttreatmentDate),

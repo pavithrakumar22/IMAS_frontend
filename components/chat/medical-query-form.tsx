@@ -3,6 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useUser } from "@clerk/nextjs"
+import { useSearchParams } from "next/navigation"
 import { ResultsModal } from "./results-modal"
 import { PreviousCasesModal } from "./previous-cases-modal"
 
@@ -25,10 +26,13 @@ const COMMON_SYMPTOMS = [
 
 export default function MedicalQueryForm() {
   const { user } = useUser()
-  const [name, setName] = useState("")
-  const [age, setAge] = useState<number | "">("")
-  const [gender, setGender] = useState("")
-  const [disease, setDisease] = useState("")
+  const searchParams = useSearchParams()
+
+  const [name, setName] = useState(searchParams.get('name') || "")
+  const [age, setAge] = useState<number | "">(searchParams.get('age') ? parseInt(searchParams.get('age')!) : "")
+  const [gender, setGender] = useState(searchParams.get('gender') || "")
+  const [disease, setDisease] = useState(searchParams.get('query') || searchParams.get('disease') || "")
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<any>(null)
@@ -47,10 +51,8 @@ export default function MedicalQueryForm() {
   const [loadingPatients, setLoadingPatients] = useState(false)
   const [selectedPatientId, setSelectedPatientId] = useState<string>("")
 
-  // Medical History Toggle State
   const [includeMedicalHistory, setIncludeMedicalHistory] = useState(false)
 
-  // Medical History Fields
   const [bloodPressure, setBloodPressure] = useState("")
   const [diabetes, setDiabetes] = useState("")
   const [symptoms, setSymptoms] = useState<string[]>([])
@@ -64,11 +66,39 @@ export default function MedicalQueryForm() {
   const [patientOutcome, setPatientOutcome] = useState("ongoing")
   const [savingOutcome, setSavingOutcome] = useState(false)
 
+  const [autoSubmitted, setAutoSubmitted] = useState(false)
+
   useEffect(() => {
     if (user) {
       loadAllPatients()
     }
   }, [user])
+
+  useEffect(() => {
+    const hasRequiredFields = name && age && gender && disease;
+    const shouldAutoSubmit = searchParams.get('autoSubmit') === 'true';
+
+    if (hasRequiredFields && shouldAutoSubmit && !autoSubmitted && user) {
+      const timer = setTimeout(() => {
+        handleAutoSubmit();
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [name, age, gender, disease, user, searchParams, autoSubmitted]);
+
+  const handleAutoSubmit = async () => {
+    if (autoSubmitted) return;
+
+    setAutoSubmitted(true);
+    setLoading(true);
+
+    const syntheticEvent = {
+      preventDefault: () => { },
+    } as React.FormEvent;
+
+    await onSubmit(syntheticEvent);
+  };
 
   const toggleSymptom = (symptom: string) => {
     setSymptoms((prev) => (prev.includes(symptom) ? prev.filter((s) => s !== symptom) : [...prev, symptom]))
@@ -91,7 +121,6 @@ export default function MedicalQueryForm() {
         setAllPatients(data.patients)
 
         const formattedCases = data.patients.map((patient: any) => {
-          // Get the latest disease with actual diagnosis
           const latestDiseaseWithDiagnosis = patient.diseases?.filter(d => d.diagnosis).pop()
 
           return {
@@ -120,7 +149,6 @@ export default function MedicalQueryForm() {
     setGender(patient.gender || "")
     setSelectedPatientId(patient.patientId || patient._id || "")
 
-    // Set the latest disease with actual diagnosis as current query
     if (patient.diseases && patient.diseases.length > 0) {
       const latestDiseaseWithDiagnosis = patient.diseases.filter((d: any) => d.name).pop()
       setDisease(latestDiseaseWithDiagnosis?.name || "")
@@ -138,7 +166,6 @@ export default function MedicalQueryForm() {
     setDisease("")
     setSelectedPatientId("")
     setIncludeMedicalHistory(false)
-    // Reset medical history fields
     setBloodPressure("")
     setDiabetes("")
     setSymptoms([])
@@ -147,6 +174,7 @@ export default function MedicalQueryForm() {
     setSmoking("")
     setAlcohol("")
     setFamilyHistory("")
+    setAutoSubmitted(false)
   }
 
   const loadPreviousPatientReport = async (patientId: string) => {
@@ -164,10 +192,8 @@ export default function MedicalQueryForm() {
       if (data.success && data.patient) {
         const patient = data.patient
 
-        // Get the latest disease with actual diagnosis
         const latestDiseaseWithDiagnosis = patient.diseases?.filter((d: any) => d.diagnosis).pop()
 
-        // Create a mock result object with BOTH versions
         const mockResult = {
           simplified: {
             simplified: latestDiseaseWithDiagnosis?.simplifiedDiagnosis || patient.LastdiagnosisSimplified || latestDiseaseWithDiagnosis?.diagnosis,
@@ -319,7 +345,6 @@ export default function MedicalQueryForm() {
     setSavingOutcome(true)
 
     try {
-      // CORRECTED: Get original diagnosis from the right place in API response
       const originalDiagnosis = result.simplified?.originalDiagnosisMarkdown ||
         result.diagnosis?.recommendations?.condition ||
         "Professional diagnosis not available"
@@ -341,24 +366,21 @@ export default function MedicalQueryForm() {
         isExistingPatient: !!selectedPatientId
       });
 
-      // Only proceed if we have actual diagnosis content
       if ((originalDiagnosis === "Professional diagnosis not available" &&
         simplifiedDiagnosis === "Simplified explanation not available")) {
         throw new Error("No diagnosis content available to save. Please try the analysis again.")
       }
 
-      // Prepare patient data - CRITICAL: Include patientId for existing patients
       const patientData = {
         name: name.trim(),
         age: Number(age),
         gender: gender,
-        patientId: selectedPatientId, // This tells backend it's an existing patient
+        patientId: selectedPatientId,
 
-        // For the new disease entry
         disease: disease.trim(),
         diseaseTranslated: translatedDisease,
-        diagnosis: originalDiagnosis, // This should now be the proper original diagnosis
-        simplifiedDiagnosis: simplifiedDiagnosis, // This is the simplified version
+        diagnosis: originalDiagnosis, 
+        simplifiedDiagnosis: simplifiedDiagnosis, 
         treatmentDate: new Date().toISOString(),
         outcome: patientOutcome,
         complexity: complexityLevel.toLowerCase()
@@ -368,7 +390,7 @@ export default function MedicalQueryForm() {
         clerkUserId: user.id,
         patientData: {
           ...patientData,
-          diagnosis: patientData.diagnosis.substring(0, 200) + "...", // Truncated for logging
+          diagnosis: patientData.diagnosis.substring(0, 200) + "...", 
           simplifiedDiagnosis: patientData.simplifiedDiagnosis.substring(0, 200) + "..."
         }
       });
@@ -398,11 +420,9 @@ export default function MedicalQueryForm() {
 
       await loadAllPatients()
 
-      // Reset form only if it's a new patient
       if (!selectedPatientId) {
         clearForm()
       } else {
-        // Keep the patient selected but clear the disease field for next entry
         setDisease("")
       }
 
@@ -438,7 +458,6 @@ export default function MedicalQueryForm() {
     if (!user || !result) return
 
     try {
-      // CORRECTED: Get original diagnosis from the right place
       const originalDiagnosis = result.simplified?.originalDiagnosisMarkdown ||
         result.diagnosis?.recommendations?.condition ||
         "Professional diagnosis not available"
@@ -450,7 +469,6 @@ export default function MedicalQueryForm() {
       const translatedDisease = getTranslatedDisease();
       const complexityLevel = getComplexityLevel();
 
-      // Only proceed if we have actual diagnosis content
       if ((originalDiagnosis === "Professional diagnosis not available" &&
         simplifiedDiagnosis === "Simplified explanation not available")) {
         console.log("No diagnosis content available for auto-save")
@@ -463,7 +481,6 @@ export default function MedicalQueryForm() {
         gender: gender,
         patientId: selectedPatientId,
 
-        // For the new disease entry
         disease: disease.trim(),
         diseaseTranslated: translatedDisease,
         diagnosis: originalDiagnosis,
@@ -472,7 +489,6 @@ export default function MedicalQueryForm() {
         outcome: "pending",
         complexity: complexityLevel.toLowerCase(),
 
-        // For the diseases array
         diseases: [
           {
             name: disease.trim(),
@@ -510,14 +526,39 @@ export default function MedicalQueryForm() {
   }
 
   return (
-    <div className="w-full px-4">
-      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm w-full">
+    <div className="w-full px-4 py-6">
+      <div className="rounded-xl border border-gray-300 bg-white p-6 shadow-lg w-full">
+        {/* Header Section */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Medical Query Analysis</h1>
+          <p className="text-gray-600 text-lg">Enter patient details and symptoms for AI-powered medical analysis</p>
+        </div>
 
+        {/* Show notification when form was pre-filled */}
+        {searchParams.get('name') && (
+          <div className="mb-6 p-4 bg-gray-100 border border-gray-300 rounded-lg">
+            <div className="flex items-center gap-3">
+              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p className="text-gray-800 font-medium">Form pre-filled with patient data</p>
+                <p className="text-gray-600 text-sm">
+                  {searchParams.get('autoSubmit') === 'true' ?
+                    "Auto-submitting analysis..." :
+                    "Review the information and click 'Analyze Medical Query'"}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
         <div className="flex flex-wrap gap-3 mb-6 justify-center">
           <button
             type="button"
-            onClick={() => setShowPatientSelector(true)} // Add this line
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white font-semibold hover:bg-blue-700 transition-colors"
+            onClick={() => setShowPatientSelector(true)}
+            className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-white font-semibold hover:bg-gray-800 transition-colors shadow-sm"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -528,7 +569,7 @@ export default function MedicalQueryForm() {
           <button
             type="button"
             onClick={clearForm}
-            className="inline-flex items-center gap-2 rounded-lg bg-gray-600 px-4 py-2 text-white font-semibold hover:bg-gray-700 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-gray-600 px-4 py-2 text-white font-semibold hover:bg-gray-700 transition-colors shadow-sm"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -539,7 +580,7 @@ export default function MedicalQueryForm() {
           <button
             type="button"
             onClick={viewAllCases}
-            className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-white font-semibold hover:bg-indigo-700 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-gray-800 px-4 py-2 text-white font-semibold hover:bg-gray-900 transition-colors shadow-sm"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -548,19 +589,20 @@ export default function MedicalQueryForm() {
           </button>
         </div>
 
+        {/* Selected Patient Indicator */}
         {selectedPatientId && (
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="mb-6 p-4 bg-gray-100 border border-gray-300 rounded-lg">
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="text-blue-700 font-medium">
+              <span className="text-gray-800 font-medium">
                 Working with existing patient: <strong>{name}</strong>
               </span>
               <button
                 type="button"
                 onClick={clearForm}
-                className="ml-auto text-sm text-blue-600 hover:text-blue-800 underline"
+                className="ml-auto text-sm text-gray-700 hover:text-gray-900 underline"
               >
                 Start New Patient
               </button>
@@ -568,66 +610,81 @@ export default function MedicalQueryForm() {
           </div>
         )}
 
+        {/* Main Form */}
         <form onSubmit={onSubmit} className="grid gap-6 mb-8 max-w-4xl mx-auto w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="grid gap-3">
-              <label htmlFor="name" className="text-lg font-medium text-gray-700">
-                Patient Name *
-              </label>
-              <input
-                id="name"
-                className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
-                placeholder="John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                autoComplete="name"
-                required
-              />
-            </div>
+          {/* Basic Information */}
+          <div className="bg-white rounded-xl border border-gray-300 p-6 shadow-sm">
+            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Patient Information
+            </h3>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid gap-3">
+                <label htmlFor="name" className="text-lg font-medium text-gray-800">
+                  Patient Name *
+                </label>
+                <input
+                  id="name"
+                  className="rounded-lg border border-gray-400 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800 transition-all"
+                  placeholder="John Doe"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoComplete="name"
+                  required
+                />
+              </div>
 
-            <div className="grid gap-3">
-              <label htmlFor="age" className="text-lg font-medium text-gray-700">
-                Age *
-              </label>
-              <input
-                id="age"
-                type="number"
-                min={0}
-                max={120}
-                className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
-                placeholder="30"
-                value={age}
-                onChange={(e) => setAge(e.target.value === "" ? "" : Number(e.target.value))}
-                required
-              />
-            </div>
+              <div className="grid gap-3">
+                <label htmlFor="age" className="text-lg font-medium text-gray-800">
+                  Age *
+                </label>
+                <input
+                  id="age"
+                  type="number"
+                  min={0}
+                  max={120}
+                  className="rounded-lg border border-gray-400 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800 transition-all"
+                  placeholder="30"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value === "" ? "" : Number(e.target.value))}
+                  required
+                />
+              </div>
 
-            <div className="grid gap-3">
-              <label htmlFor="gender" className="text-lg font-medium text-gray-700">
-                Gender *
-              </label>
-              <select
-                id="gender"
-                className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                required
-              >
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-                <option value="prefer-not-to-say">Prefer not to say</option>
-              </select>
+              <div className="grid gap-3">
+                <label htmlFor="gender" className="text-lg font-medium text-gray-800">
+                  Gender *
+                </label>
+                <select
+                  id="gender"
+                  className="rounded-lg border border-gray-400 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800 transition-all"
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  required
+                >
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                  <option value="prefer-not-to-say">Prefer not to say</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          {/* Medical History Toggle */}
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-6">
+          {/* Medical History Section */}
+          <div className="bg-gray-50 border border-gray-300 rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-xl font-bold text-blue-900">Medical History</h3>
-                <p className="text-blue-700 text-sm mt-1">
+                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Medical History
+                </h3>
+                <p className="text-gray-600 text-sm mt-1">
                   Optional information that helps us provide more accurate analysis.
                 </p>
               </div>
@@ -638,7 +695,7 @@ export default function MedicalQueryForm() {
                   checked={includeMedicalHistory}
                   onChange={(e) => setIncludeMedicalHistory(e.target.checked)}
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-400 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black"></div>
                 <span className="ml-3 text-sm font-medium text-gray-900">
                   {includeMedicalHistory ? 'Enabled' : 'Disabled'}
                 </span>
@@ -649,9 +706,9 @@ export default function MedicalQueryForm() {
               <div className="space-y-6 animate-fadeIn">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="grid gap-3">
-                    <label className="text-lg font-medium text-gray-700">Blood Pressure</label>
+                    <label className="text-lg font-medium text-gray-800">Blood Pressure</label>
                     <select
-                      className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      className="rounded-lg border border-gray-400 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800 transition-all"
                       value={bloodPressure}
                       onChange={(e) => setBloodPressure(e.target.value)}
                     >
@@ -664,9 +721,9 @@ export default function MedicalQueryForm() {
                   </div>
 
                   <div className="grid gap-3">
-                    <label className="text-lg font-medium text-gray-700">Diabetes</label>
+                    <label className="text-lg font-medium text-gray-800">Diabetes</label>
                     <select
-                      className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      className="rounded-lg border border-gray-400 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800 transition-all"
                       value={diabetes}
                       onChange={(e) => setDiabetes(e.target.value)}
                     >
@@ -681,21 +738,21 @@ export default function MedicalQueryForm() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="text-lg font-medium text-gray-700 mb-3 block">Common Symptoms</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto p-3 bg-white rounded-lg border border-gray-300">
+                <div className="bg-white rounded-lg border border-gray-300 p-4">
+                  <label className="text-lg font-medium text-gray-800 mb-3 block">Common Symptoms</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto p-3 bg-gray-100 rounded-lg">
                     {COMMON_SYMPTOMS.map((symptom) => (
                       <label
                         key={symptom}
-                        className="flex items-center gap-2 p-2 hover:bg-blue-50 rounded cursor-pointer transition-colors"
+                        className="flex items-center gap-2 p-2 hover:bg-gray-200 rounded cursor-pointer transition-colors"
                       >
                         <input
                           type="checkbox"
                           checked={symptoms.includes(symptom)}
                           onChange={() => toggleSymptom(symptom)}
-                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                          className="w-4 h-4 text-gray-800 rounded focus:ring-gray-800"
                         />
-                        <span className="text-gray-700">{symptom}</span>
+                        <span className="text-gray-800">{symptom}</span>
                       </label>
                     ))}
                   </div>
@@ -703,10 +760,10 @@ export default function MedicalQueryForm() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="grid gap-3">
-                    <label className="text-lg font-medium text-gray-700">Current Medications</label>
+                    <label className="text-lg font-medium text-gray-800">Current Medications</label>
                     <input
                       type="text"
-                      className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      className="rounded-lg border border-gray-400 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800 transition-all"
                       placeholder="e.g., Metformin, Lisinopril"
                       value={medications}
                       onChange={(e) => setMedications(e.target.value)}
@@ -714,10 +771,10 @@ export default function MedicalQueryForm() {
                   </div>
 
                   <div className="grid gap-3">
-                    <label className="text-lg font-medium text-gray-700">Allergies</label>
+                    <label className="text-lg font-medium text-gray-800">Allergies</label>
                     <input
                       type="text"
-                      className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      className="rounded-lg border border-gray-400 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800 transition-all"
                       placeholder="e.g., Penicillin, Nuts"
                       value={allergies}
                       onChange={(e) => setAllergies(e.target.value)}
@@ -725,9 +782,9 @@ export default function MedicalQueryForm() {
                   </div>
 
                   <div className="grid gap-3">
-                    <label className="text-lg font-medium text-gray-700">Smoking</label>
+                    <label className="text-lg font-medium text-gray-800">Smoking</label>
                     <select
-                      className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      className="rounded-lg border border-gray-400 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800 transition-all"
                       value={smoking}
                       onChange={(e) => setSmoking(e.target.value)}
                     >
@@ -740,9 +797,9 @@ export default function MedicalQueryForm() {
                   </div>
 
                   <div className="grid gap-3">
-                    <label className="text-lg font-medium text-gray-700">Alcohol Consumption</label>
+                    <label className="text-lg font-medium text-gray-800">Alcohol Consumption</label>
                     <select
-                      className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      className="rounded-lg border border-gray-400 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800 transition-all"
                       value={alcohol}
                       onChange={(e) => setAlcohol(e.target.value)}
                     >
@@ -756,9 +813,9 @@ export default function MedicalQueryForm() {
                 </div>
 
                 <div>
-                  <label className="text-lg font-medium text-gray-700 mb-3 block">Family Medical History</label>
+                  <label className="text-lg font-medium text-gray-800 mb-3 block">Family Medical History</label>
                   <textarea
-                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-vertical transition-all"
+                    className="w-full rounded-lg border border-gray-400 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800 resize-vertical transition-all"
                     placeholder="e.g., Father had heart disease, Mother has diabetes..."
                     rows={3}
                     value={familyHistory}
@@ -769,22 +826,29 @@ export default function MedicalQueryForm() {
             )}
           </div>
 
-          <div className="grid gap-3">
-            <label htmlFor="disease" className="text-lg font-medium text-gray-700">
-              Current Symptoms / Medical Query *
-            </label>
-            <textarea
-              id="disease"
-              className="min-h-40 rounded-lg border border-gray-300 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-vertical transition-all"
-              placeholder="Describe your current symptoms, concerns, or medical questions in detail... (e.g., persistent cough for 3 days, fever, chest pain, shortness of breath)"
-              value={disease}
-              onChange={(e) => setDisease(e.target.value)}
-              required
-            />
+          {/* Symptoms/Query Section */}
+          <div className="bg-white rounded-xl border border-gray-300 p-6 shadow-sm">
+            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              Current Symptoms / Medical Query
+            </h3>
+            <div className="grid gap-3">
+              <textarea
+                id="disease"
+                className="min-h-40 rounded-lg border border-gray-400 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800 resize-vertical transition-all"
+                placeholder="Describe your current symptoms, concerns, or medical questions in detail... (e.g., persistent cough for 3 days, fever, chest pain, shortness of breath)"
+                value={disease}
+                onChange={(e) => setDisease(e.target.value)}
+                required
+              />
+            </div>
           </div>
 
-          <div className="grid gap-3">
-            <label className="text-lg font-medium text-gray-700">Response Type</label>
+          {/* Response Type */}
+          <div className="bg-white rounded-xl border border-gray-300 p-6 shadow-sm">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Response Type</h3>
             <div className="flex flex-wrap gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -793,9 +857,9 @@ export default function MedicalQueryForm() {
                   value="both"
                   checked={responseType === "both"}
                   onChange={(e) => setResponseType(e.target.value as "simplified" | "original" | "both")}
-                  className="w-5 h-5 text-purple-600"
+                  className="w-5 h-5 text-gray-800"
                 />
-                <span className="text-lg text-gray-700">Both (Original + Simplified)</span>
+                <span className="text-lg text-gray-800">Both (Original + Simplified)</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -804,9 +868,9 @@ export default function MedicalQueryForm() {
                   value="simplified"
                   checked={responseType === "simplified"}
                   onChange={(e) => setResponseType(e.target.value as "simplified" | "original" | "both")}
-                  className="w-5 h-5 text-purple-600"
+                  className="w-5 h-5 text-gray-800"
                 />
-                <span className="text-lg text-gray-700">Simplified Only</span>
+                <span className="text-lg text-gray-800">Simplified Only</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -815,18 +879,19 @@ export default function MedicalQueryForm() {
                   value="original"
                   checked={responseType === "original"}
                   onChange={(e) => setResponseType(e.target.value as "simplified" | "original" | "both")}
-                  className="w-5 h-5 text-purple-600"
+                  className="w-5 h-5 text-gray-800"
                 />
-                <span className="text-lg text-gray-700">Original Diagnosis Only</span>
+                <span className="text-lg text-gray-800">Original Diagnosis Only</span>
               </label>
             </div>
           </div>
 
+          {/* Submit Button */}
           <div className="flex flex-col sm:flex-row items-center gap-4 justify-center">
             <button
               type="submit"
               disabled={loading || !user}
-              className="inline-flex items-center justify-center rounded-lg bg-purple-600 px-8 py-4 text-white font-semibold text-lg hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors min-w-64"
+              className="inline-flex items-center justify-center rounded-lg bg-black px-8 py-4 text-white font-semibold text-lg hover:bg-gray-800 disabled:opacity-60 disabled:cursor-not-allowed transition-all min-w-64 shadow-lg"
             >
               {loading ? (
                 <>
@@ -855,7 +920,12 @@ export default function MedicalQueryForm() {
               ) : !user ? (
                 "Please Sign In"
               ) : (
-                "Analyze Medical Query"
+                <>
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  Analyze Medical Query
+                </>
               )}
             </button>
             {error && (
@@ -866,11 +936,12 @@ export default function MedicalQueryForm() {
           </div>
         </form>
 
+        {/* Additional Actions */}
         <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
           {showSavedResultsButton && savedResults && (
             <button
               onClick={reopenSavedResults}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-6 py-3 text-white font-semibold hover:bg-green-700 transition-colors"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-800 px-6 py-3 text-white font-semibold hover:bg-gray-700 transition-colors shadow-sm"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -887,7 +958,7 @@ export default function MedicalQueryForm() {
           {previousPatientReport && (
             <button
               onClick={() => setShowModal(true)}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-white font-semibold hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-black px-6 py-3 text-white font-semibold hover:bg-gray-800 transition-colors shadow-sm"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -903,14 +974,15 @@ export default function MedicalQueryForm() {
         </div>
       </div>
 
+      {/* Patient Selector Modal */}
       {showPatientSelector && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-            <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex items-center justify-between border-b">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col border border-gray-300">
+            <div className="sticky top-0 bg-black px-6 py-4 flex items-center justify-between border-b border-gray-700 rounded-t-xl">
               <h2 className="text-2xl font-bold text-white">Select Previous Patient</h2>
               <button
                 onClick={() => setShowPatientSelector(false)}
-                className="text-white hover:bg-blue-800 rounded-lg p-2 transition-colors"
+                className="text-white hover:bg-gray-800 rounded-lg p-2 transition-colors"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -921,7 +993,7 @@ export default function MedicalQueryForm() {
             <div className="overflow-y-auto flex-1 p-6">
               {loadingPatients ? (
                 <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-800 mx-auto"></div>
                   <p className="text-gray-600 mt-4">Loading patients...</p>
                 </div>
               ) : allPatients.length === 0 ? (
@@ -938,11 +1010,11 @@ export default function MedicalQueryForm() {
                     <button
                       key={patient.patientId || patient._id}
                       onClick={() => selectPatient(patient)}
-                      className="w-full text-left p-4 border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-all"
+                      className="w-full text-left p-4 border border-gray-300 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all hover:shadow-sm"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <h3 className="font-bold text-lg text-gray-800">{patient.name}</h3>
+                          <h3 className="font-bold text-lg text-gray-900">{patient.name}</h3>
                           <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
                             <span>Age: {patient.age || 'Not specified'}</span>
                             <span>Gender: {patient.gender || 'Not specified'}</span>
@@ -959,7 +1031,7 @@ export default function MedicalQueryForm() {
                           )}
                         </div>
                         <div className="ml-4">
-                          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
                         </div>
@@ -970,10 +1042,10 @@ export default function MedicalQueryForm() {
               )}
             </div>
 
-            <div className="sticky bottom-0 bg-gray-50 border-t px-6 py-4 flex justify-end">
+            <div className="sticky bottom-0 bg-gray-100 border-t border-gray-300 px-6 py-4 flex justify-end rounded-b-xl">
               <button
                 onClick={() => setShowPatientSelector(false)}
-                className="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-colors"
+                className="px-6 py-2 rounded-lg border border-gray-400 text-gray-800 font-semibold hover:bg-gray-200 transition-colors"
               >
                 Cancel
               </button>
@@ -982,6 +1054,7 @@ export default function MedicalQueryForm() {
         </div>
       )}
 
+      {/* Results Modal */}
       {result && showModal && (
         <ResultsModal
           result={result}
@@ -998,6 +1071,7 @@ export default function MedicalQueryForm() {
         />
       )}
 
+      {/* Previous Cases Modal */}
       {showPreviousCasesModal && (
         <PreviousCasesModal
           cases={previousCases}

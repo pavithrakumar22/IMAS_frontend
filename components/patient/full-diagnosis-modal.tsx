@@ -1,9 +1,11 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
 import { X, Calendar, User, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { DiseaseData } from "./types"
+import type { DiseaseData } from "./types"
 
 interface FullDiagnosisModalProps {
   disease: DiseaseData
@@ -14,26 +16,25 @@ interface FullDiagnosisModalProps {
 export function FullDiagnosisModal({ disease, patientName, onClose }: FullDiagnosisModalProps) {
   const [activeTab, setActiveTab] = useState<"diagnosis" | "simplified">("diagnosis")
 
-  // EXACT SAME markdown rendering as ResultsModal
   const renderMarkdown = (content: string) => {
-    if (!content) return { __html: '' }
+    if (!content) return { __html: "" }
 
-    const lines = content.split('\n')
+    const lines = content.split("\n")
     let inList = false
-    let html = ''
+    let html = ""
 
     for (const line of lines) {
       const trimmedLine = line.trim()
 
-      if (trimmedLine.startsWith('##### ') || trimmedLine.startsWith('#### ')) {
+      if (trimmedLine.startsWith("##### ") || trimmedLine.startsWith("#### ")) {
         html += `<h5 class="text-md font-semibold mt-4 mb-2 text-gray-800">${trimmedLine.substring(5)}</h5>`
-      } else if (trimmedLine.startsWith('### ')) {
+      } else if (trimmedLine.startsWith("### ")) {
         html += `<h4 class="text-lg font-semibold mt-6 mb-3 text-gray-800">${trimmedLine.substring(4)}</h4>`
-      } else if (trimmedLine.startsWith('## ')) {
+      } else if (trimmedLine.startsWith("## ")) {
         html += `<h3 class="text-xl font-semibold mt-8 mb-4 text-gray-800 border-b pb-2">${trimmedLine.substring(3)}</h3>`
-      } else if (trimmedLine.startsWith('# ')) {
+      } else if (trimmedLine.startsWith("# ")) {
         html += `<h2 class="text-2xl font-bold mt-10 mb-6 text-gray-800 border-b pb-3">${trimmedLine.substring(2)}</h2>`
-      } else if (trimmedLine.startsWith('• ') || trimmedLine.startsWith('* ') || trimmedLine.startsWith('- ')) {
+      } else if (trimmedLine.startsWith("• ") || trimmedLine.startsWith("* ") || trimmedLine.startsWith("- ")) {
         if (!inList) {
           html += '<ul class="list-disc ml-6 space-y-2">'
           inList = true
@@ -43,12 +44,12 @@ export function FullDiagnosisModal({ disease, patientName, onClose }: FullDiagno
           .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-800">$1</strong>')
           .replace(/\*(.*?)\*/g, '<em class="italic text-gray-700">$1</em>')
         html += `<li class="text-gray-700 mb-2">${listItem}</li>`
-      } else if (inList && trimmedLine === '') {
-        html += '</ul>'
+      } else if (inList && trimmedLine === "") {
+        html += "</ul>"
         inList = false
       } else if (trimmedLine) {
         if (inList) {
-          html += '</ul>'
+          html += "</ul>"
           inList = false
         }
         const processedLine = trimmedLine
@@ -56,33 +57,31 @@ export function FullDiagnosisModal({ disease, patientName, onClose }: FullDiagno
           .replace(/\*(.*?)\*/g, '<em class="italic text-gray-700">$1</em>')
         html += `<p class="text-gray-700 mb-3">${processedLine}</p>`
       } else {
-        html += '<br>'
+        html += "<br>"
       }
     }
 
     if (inList) {
-      html += '</ul>'
+      html += "</ul>"
     }
 
     return { __html: `<div class="space-y-4">${html}</div>` }
   }
 
-  // EXACT SAME content cleaning as ResultsModal
   const cleanSimplifiedContent = (content: string) => {
-    if (!content) return ''
+    if (!content) return ""
 
     return content
-      .replace(/\$\$simple conversational version\$\$:\*\*\\\\n\\\\n/g, '')
-      .replace(/\*\*\\\\n\\\\n/g, '\n\n')
-      .replace(/\\\\n/g, '\n')
-      .replace(/\*\*/g, '**')
-      .replace(/\*/g, '*')
-      .replace(/---\\\\n\\\\n\*\*2\./g, '')
-      .replace(/\$\$formatted for easy reading\$\$:\*\*\\\\n\\\\n/g, '')
+      .replace(/\$\$simple conversational version\$\$:\*\*\\\\n\\\\n/g, "")
+      .replace(/\*\*\\\\n\\\\n/g, "\n\n")
+      .replace(/\\\\n/g, "\n")
+      .replace(/\*\*/g, "**")
+      .replace(/\*/g, "*")
+      .replace(/---\\\\n\\\\n\*\*2\./g, "")
+      .replace(/\$\$formatted for easy reading\$\$:\*\*\\\\n\\\\n/g, "")
       .trim()
   }
 
-  // Helper to check if content exists (same as ResultsModal)
   const hasContent = (content: any) => {
     return content && content.length > 0 && content !== "null" && content !== "undefined"
   }
@@ -94,51 +93,49 @@ export function FullDiagnosisModal({ disease, patientName, onClose }: FullDiagno
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     })
   }
 
   const getOutcomeColor = (outcome: string) => {
     switch (outcome) {
-      case 'cured':
-        return 'bg-green-100 text-green-800 border border-green-200'
-      case 'improved':
-        return 'bg-blue-100 text-blue-800 border border-blue-200'
-      case 'referred':
-        return 'bg-yellow-100 text-yellow-800 border border-yellow-200'
-      case 'ongoing':
-        return 'bg-gray-100 text-gray-800 border border-gray-200'
+      case "cured":
+        return "bg-green-100 text-green-800 border border-green-200"
+      case "improved":
+        return "bg-blue-100 text-blue-800 border border-blue-200"
+      case "referred":
+        return "bg-yellow-100 text-yellow-800 border border-yellow-200"
+      case "ongoing":
+        return "bg-gray-100 text-gray-800 border border-gray-200"
       default:
-        return 'bg-gray-100 text-gray-800 border border-gray-200'
+        return "bg-gray-100 text-gray-800 border border-gray-200"
     }
   }
 
   const getComplexityColor = (complexity?: string) => {
     switch (complexity) {
-      case 'high':
-        return 'bg-red-100 text-red-800 border border-red-200'
-      case 'medium':
-        return 'bg-orange-100 text-orange-800 border border-orange-200'
-      case 'low':
-        return 'bg-green-100 text-green-800 border border-green-200'
+      case "high":
+        return "bg-red-100 text-red-800 border border-red-200"
+      case "medium":
+        return "bg-orange-100 text-orange-800 border border-orange-200"
+      case "low":
+        return "bg-green-100 text-green-800 border border-green-200"
       default:
-        return 'bg-gray-100 text-gray-800 border border-gray-200'
+        return "bg-gray-100 text-gray-800 border border-gray-200"
     }
   }
 
-  // Check if it's an emergency case (same logic as ResultsModal)
   const isEmergency = () => {
-    return disease.complexity === 'high'
+    return disease.complexity === "high"
   }
 
-  // Get content for display (similar to ResultsModal)
   const getContent = () => {
     return {
       originalDiagnosis: cleanSimplifiedContent(disease.diagnosis || ""),
-      simplifiedDiagnosis: cleanSimplifiedContent(disease.simplifiedDiagnosis || "")
+      simplifiedDiagnosis: cleanSimplifiedContent(disease.simplifiedDiagnosis || ""),
     }
   }
 
@@ -156,7 +153,6 @@ export function FullDiagnosisModal({ disease, patientName, onClose }: FullDiagno
 
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col">
-          {/* Header - Same style as ResultsModal */}
           <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 flex items-center justify-between border-b">
             <div className="flex-1">
               <h2 className="text-2xl font-bold text-white">Full Medical Diagnosis</h2>
@@ -180,7 +176,6 @@ export function FullDiagnosisModal({ disease, patientName, onClose }: FullDiagno
           </div>
 
           <div className="overflow-y-auto flex-1 p-6 space-y-6">
-            {/* Emergency Alert - Same style as ResultsModal */}
             {isEmergencyCase && (
               <div className="bg-red-50 border border-red-300 rounded-lg p-6">
                 <div className="flex items-center gap-4">
@@ -197,23 +192,25 @@ export function FullDiagnosisModal({ disease, patientName, onClose }: FullDiagno
               </div>
             )}
 
-            {/* Disease Header */}
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-2xl font-bold text-gray-800">{disease.name}</h3>
                 <div className="flex gap-3">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${getOutcomeColor(disease.outcome)}`}>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${getOutcomeColor(disease.outcome)}`}
+                  >
                     {disease.outcome}
                   </span>
                   {disease.complexity && (
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${getComplexityColor(disease.complexity)}`}>
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${getComplexityColor(disease.complexity)}`}
+                    >
                       {disease.complexity} complexity
                     </span>
                   )}
                 </div>
               </div>
 
-              {/* Translated Disease Name */}
               {disease.nameTranslated && disease.nameTranslated !== disease.name && (
                 <div className="mb-4 p-3 bg-blue-50 rounded border border-blue-200">
                   <p className="text-blue-700">
@@ -223,7 +220,6 @@ export function FullDiagnosisModal({ disease, patientName, onClose }: FullDiagno
               )}
             </div>
 
-            {/* Tabs for diagnosis and simplified - EXACTLY like ResultsModal */}
             {showOriginal && showSimplified && (
               <div className="flex gap-2 border-b">
                 <button
@@ -249,7 +245,6 @@ export function FullDiagnosisModal({ disease, patientName, onClose }: FullDiagno
               </div>
             )}
 
-            {/* Diagnosis Tab - EXACTLY like ResultsModal */}
             {(activeTab === "diagnosis" || !showSimplified) && showOriginal && (
               <div className="rounded-lg border border-gray-200 bg-white p-6">
                 <div className="flex items-center gap-4 mb-6">
@@ -277,7 +272,6 @@ export function FullDiagnosisModal({ disease, patientName, onClose }: FullDiagno
               </div>
             )}
 
-            {/* Simplified Tab - EXACTLY like ResultsModal */}
             {(activeTab === "simplified" || !showOriginal) && showSimplified && (
               <div className="rounded-lg border border-gray-200 bg-white p-6">
                 <div className="flex items-center gap-4 mb-6">
@@ -297,13 +291,10 @@ export function FullDiagnosisModal({ disease, patientName, onClose }: FullDiagno
                   </div>
                 ) : (
                   <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg mb-6">
-                    <p className="text-yellow-700 text-lg">
-                      Simple summary is not available for this diagnosis.
-                    </p>
+                    <p className="text-yellow-700 text-lg">Simple summary is not available for this diagnosis.</p>
                   </div>
                 )}
 
-                {/* Detailed Explanation Section - Same structure as ResultsModal */}
                 {hasContent(content.simplifiedDiagnosis) ? (
                   <div className="p-6 bg-white border border-gray-200 rounded-lg">
                     <h4 className="font-bold text-gray-800 text-xl mb-6">Detailed Explanation</h4>
@@ -312,27 +303,16 @@ export function FullDiagnosisModal({ disease, patientName, onClose }: FullDiagno
                       dangerouslySetInnerHTML={renderMarkdown(content.simplifiedDiagnosis)}
                     />
                   </div>
-                ) : content.simplifiedDiagnosis ? (
-                  <div className="p-6 bg-white border border-gray-200 rounded-lg">
-                    <h4 className="font-bold text-gray-800 text-xl mb-6">Detailed Explanation</h4>
-                    <p className="text-gray-700 text-lg leading-relaxed whitespace-pre-line">
-                      {content.simplifiedDiagnosis}
-                    </p>
-                  </div>
                 ) : (
                   <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-yellow-700 text-lg">
-                      Detailed explanation is not available for this diagnosis.
-                    </p>
+                    <p className="text-yellow-700 text-lg">Detailed explanation is not available for this diagnosis.</p>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Show both sections if no tabs (when only one type is available) */}
             {(!showOriginal || !showSimplified) && (
               <>
-                {/* Medical Diagnosis Section */}
                 {showOriginal && (
                   <div className="rounded-lg border border-gray-200 bg-white p-6">
                     <div className="flex items-center gap-4 mb-6">
@@ -352,7 +332,6 @@ export function FullDiagnosisModal({ disease, patientName, onClose }: FullDiagno
                   </div>
                 )}
 
-                {/* Simplified Explanation Section */}
                 {showSimplified && (
                   <div className="rounded-lg border border-gray-200 bg-white p-6">
                     <div className="flex items-center gap-4 mb-6">
@@ -382,7 +361,6 @@ export function FullDiagnosisModal({ disease, patientName, onClose }: FullDiagno
               </>
             )}
 
-            {/* Treatment Information */}
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
               <h4 className="text-lg font-semibold text-gray-800 mb-4">Treatment Information</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -404,9 +382,8 @@ export function FullDiagnosisModal({ disease, patientName, onClose }: FullDiagno
             </div>
           </div>
 
-          {/* Footer - Same style as ResultsModal */}
           <div className="sticky bottom-0 bg-gray-50 border-t px-6 py-4 flex justify-end">
-            <Button onClick={onClose} variant="outline" className="px-6 py-2">
+            <Button onClick={onClose} variant="outline" className="px-6 py-2 bg-transparent">
               Close Diagnosis
             </Button>
           </div>

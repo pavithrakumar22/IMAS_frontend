@@ -259,9 +259,11 @@ export default async function HomePage() {
               </Button>
             </Link>
           ) : (
-            <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
-              Access Platform <ArrowRight className="ml-2 w-4 h-4" />
-            </Button>
+            <Link href={"/sign-up"}>
+              <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
+                Access Platform <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+            </Link>
           )}
         </div>
       </section>

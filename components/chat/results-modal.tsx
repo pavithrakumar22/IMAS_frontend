@@ -56,13 +56,13 @@ export function ResultsModal({
       const trimmedLine = line.trim()
 
       if (trimmedLine.startsWith("##### ") || trimmedLine.startsWith("#### ")) {
-        html += `<h5 class="text-md font-semibold mt-4 mb-2 text-gray-800">${trimmedLine.substring(5)}</h5>`
+        html += `<h5 class="text-md font-semibold mt-4 mb-2 text-gray-900">${trimmedLine.substring(5)}</h5>`
       } else if (trimmedLine.startsWith("### ")) {
-        html += `<h4 class="text-lg font-semibold mt-6 mb-3 text-gray-800">${trimmedLine.substring(4)}</h4>`
+        html += `<h4 class="text-lg font-semibold mt-6 mb-3 text-gray-900">${trimmedLine.substring(4)}</h4>`
       } else if (trimmedLine.startsWith("## ")) {
-        html += `<h3 class="text-xl font-semibold mt-8 mb-4 text-gray-800 border-b pb-2">${trimmedLine.substring(3)}</h3>`
+        html += `<h3 class="text-xl font-semibold mt-8 mb-4 text-gray-900 border-b border-gray-300 pb-2">${trimmedLine.substring(3)}</h3>`
       } else if (trimmedLine.startsWith("# ")) {
-        html += `<h2 class="text-2xl font-bold mt-10 mb-6 text-gray-800 border-b pb-3">${trimmedLine.substring(2)}</h2>`
+        html += `<h2 class="text-2xl font-bold mt-10 mb-6 text-gray-900 border-b border-gray-300 pb-3">${trimmedLine.substring(2)}</h2>`
       } else if (trimmedLine.startsWith("• ") || trimmedLine.startsWith("* ") || trimmedLine.startsWith("- ")) {
         if (!inList) {
           html += '<ul class="list-disc ml-6 space-y-2">'
@@ -70,9 +70,9 @@ export function ResultsModal({
         }
         const listItem = trimmedLine
           .substring(2)
-          .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-800">$1</strong>')
-          .replace(/\*(.*?)\*/g, '<em class="italic text-gray-700">$1</em>')
-        html += `<li class="text-gray-700 mb-2">${listItem}</li>`
+          .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')
+          .replace(/\*(.*?)\*/g, '<em class="italic text-gray-800">$1</em>')
+        html += `<li class="text-gray-800 mb-2">${listItem}</li>`
       } else if (inList && trimmedLine === "") {
         html += "</ul>"
         inList = false
@@ -82,9 +82,9 @@ export function ResultsModal({
           inList = false
         }
         const processedLine = trimmedLine
-          .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-800">$1</strong>')
-          .replace(/\*(.*?)\*/g, '<em class="italic text-gray-700">$1</em>')
-        html += `<p class="text-gray-700 mb-3">${processedLine}</p>`
+          .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')
+          .replace(/\*(.*?)\*/g, '<em class="italic text-gray-800">$1</em>')
+        html += `<p class="text-gray-800 mb-3">${processedLine}</p>`
       } else {
         html += "<br>"
       }
@@ -155,13 +155,13 @@ export function ResultsModal({
   const getComplexityColor = (level: string) => {
     switch (level?.toUpperCase()) {
       case "HIGH":
-        return "bg-red-100 text-red-800 border border-red-200"
+        return "bg-gray-900 text-white border border-gray-900"
       case "MEDIUM":
-        return "bg-yellow-100 text-yellow-800 border border-yellow-200"
+        return "bg-gray-700 text-white border border-gray-700"
       case "LOW":
-        return "bg-green-100 text-green-800 border border-green-200"
+        return "bg-gray-500 text-white border border-gray-500"
       default:
-        return "bg-gray-100 text-gray-800 border border-gray-200"
+        return "bg-gray-100 text-gray-800 border border-gray-300"
     }
   }
 
@@ -225,18 +225,18 @@ export function ResultsModal({
         style={{ overscrollBehavior: "contain" }}
       >
         <div
-          className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col"
+          className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col border border-gray-300"
           onClick={(e) => e.stopPropagation()} // FIX: Prevent click propagation
         >
           {/* Header */}
-          <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 flex items-center justify-between border-b flex-shrink-0">
+          <div className="sticky top-0 bg-black px-6 py-4 flex items-center justify-between border-b border-gray-700 flex-shrink-0">
             <div>
               <h2 className="text-2xl font-bold text-white">Medical Analysis Results</h2>
-              <p className="text-purple-100 text-sm mt-1">Analysis for {userName}</p>
+              <p className="text-gray-300 text-sm mt-1">Analysis for {userName}</p>
             </div>
             <button
               onClick={handleClose}
-              className="text-white hover:bg-purple-800 rounded-lg p-2 transition-colors"
+              className="text-white hover:bg-gray-800 rounded-lg p-2 transition-colors"
               aria-label="Close modal"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,10 +249,10 @@ export function ResultsModal({
           <div className="overflow-y-auto flex-1 p-6 space-y-6" style={{ overscrollBehavior: "contain" }}>
             {/* Emergency Alert */}
             {isEmergencyCase && (
-              <div className="bg-red-50 border border-red-300 rounded-lg p-6">
+              <div className="bg-gray-100 border border-gray-400 rounded-lg p-6">
                 <div className="flex items-center gap-4">
                   <div className="flex-shrink-0">
-                    <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-8 h-8 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -262,14 +262,14 @@ export function ResultsModal({
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-red-800 mb-2">MEDICAL EMERGENCY</h3>
-                    <p className="text-red-700 text-lg font-semibold mb-3">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">MEDICAL EMERGENCY</h3>
+                    <p className="text-gray-800 text-lg font-semibold mb-3">
                       This condition requires immediate medical attention!
                     </p>
                     {immediateActions && (
-                      <div className="bg-white p-4 rounded border border-red-200">
-                        <p className="text-red-800 font-medium">Immediate Actions:</p>
-                        <p className="text-red-700 mt-1">{immediateActions}</p>
+                      <div className="bg-white p-4 rounded border border-gray-400">
+                        <p className="text-gray-900 font-medium">Immediate Actions:</p>
+                        <p className="text-gray-800 mt-1">{immediateActions}</p>
                       </div>
                     )}
                   </div>
@@ -279,14 +279,14 @@ export function ResultsModal({
 
             {/* Complexity Badge */}
             {complexityLevel && !isEmergencyCase && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <div className="bg-gray-100 border border-gray-300 rounded-lg p-6">
                 <div className="flex items-center gap-4">
                   <div className={`px-4 py-2 rounded-full text-lg font-bold ${getComplexityColor(complexityLevel)}`}>
                     {complexityLevel} COMPLEXITY
                   </div>
                   {complexityReason && (
                     <div className="flex-1">
-                      <p className="text-blue-800 text-lg">{complexityReason}</p>
+                      <p className="text-gray-800 text-lg">{complexityReason}</p>
                     </div>
                   )}
                 </div>
@@ -295,12 +295,12 @@ export function ResultsModal({
 
             {/* Tabs for diagnosis and simplified */}
             {showOriginal && showSimplified && (
-              <div className="flex gap-2 border-b">
+              <div className="flex gap-2 border-b border-gray-300">
                 <button
                   onClick={() => setActiveTab("diagnosis")}
                   className={`px-4 py-2 font-semibold border-b-2 transition-colors ${
                     activeTab === "diagnosis"
-                      ? "border-purple-600 text-purple-600"
+                      ? "border-black text-gray-900"
                       : "border-transparent text-gray-600 hover:text-gray-800"
                   }`}
                 >
@@ -310,7 +310,7 @@ export function ResultsModal({
                   onClick={() => setActiveTab("simplified")}
                   className={`px-4 py-2 font-semibold border-b-2 transition-colors ${
                     activeTab === "simplified"
-                      ? "border-green-600 text-green-600"
+                      ? "border-gray-700 text-gray-900"
                       : "border-transparent text-gray-600 hover:text-gray-800"
                   }`}
                 >
@@ -321,25 +321,25 @@ export function ResultsModal({
 
             {/* Diagnosis Tab */}
             {(activeTab === "diagnosis" || !showSimplified) && showOriginal && (
-              <div className="rounded-lg border border-gray-200 bg-white p-6">
+              <div className="rounded-lg border border-gray-300 bg-white p-6">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-4 h-4 bg-purple-600 rounded-full"></div>
-                  <h3 className="text-2xl font-bold text-gray-800">Medical Diagnosis</h3>
-                  <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                  <div className="w-4 h-4 bg-black rounded-full"></div>
+                  <h3 className="text-2xl font-bold text-gray-900">Medical Diagnosis</h3>
+                  <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-medium border border-gray-300">
                     Professional Version
                   </span>
                 </div>
 
                 {hasContent(simplifiedContent.originalDiagnosisMarkdown) ? (
-                  <div className="p-6 bg-white border border-gray-200 rounded-lg">
+                  <div className="p-6 bg-white border border-gray-300 rounded-lg">
                     <div
-                      className="text-gray-700 leading-relaxed text-lg prose prose-lg max-w-none"
+                      className="text-gray-800 leading-relaxed text-lg prose prose-lg max-w-none"
                       dangerouslySetInnerHTML={renderMarkdown(simplifiedContent.originalDiagnosisMarkdown)}
                     />
                   </div>
                 ) : (
-                  <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-yellow-700 text-lg">
+                  <div className="p-6 bg-gray-100 border border-gray-400 rounded-lg">
+                    <p className="text-gray-700 text-lg">
                       Detailed medical analysis is being prepared. Please check back shortly.
                     </p>
                   </div>
@@ -349,48 +349,48 @@ export function ResultsModal({
 
             {/* Simplified Tab */}
             {(activeTab === "simplified" || !showOriginal) && showSimplified && (
-              <div className="rounded-lg border border-gray-200 bg-white p-6">
+              <div className="rounded-lg border border-gray-300 bg-white p-6">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-4 h-4 bg-green-600 rounded-full"></div>
-                  <h3 className="text-2xl font-bold text-gray-800">Simplified Explanation</h3>
-                  <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                  <div className="w-4 h-4 bg-gray-700 rounded-full"></div>
+                  <h3 className="text-2xl font-bold text-gray-900">Simplified Explanation</h3>
+                  <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-medium border border-gray-300">
                     Patient-Friendly Version
                   </span>
                 </div>
 
                 {hasContent(simplifiedContent.simplified) ? (
-                  <div className="p-6 bg-green-50 border border-green-200 rounded-lg mb-6">
-                    <h4 className="font-bold text-green-800 text-xl mb-4">Simple Summary</h4>
-                    <p className="text-green-700 text-lg leading-relaxed whitespace-pre-line">
+                  <div className="p-6 bg-gray-50 border border-gray-300 rounded-lg mb-6">
+                    <h4 className="font-bold text-gray-900 text-xl mb-4">Simple Summary</h4>
+                    <p className="text-gray-800 text-lg leading-relaxed whitespace-pre-line">
                       {simplifiedContent.simplified}
                     </p>
                   </div>
                 ) : (
-                  <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg mb-6">
-                    <p className="text-yellow-700 text-lg">
+                  <div className="p-6 bg-gray-100 border border-gray-400 rounded-lg mb-6">
+                    <p className="text-gray-700 text-lg">
                       Simple summary is being prepared. Please check back shortly.
                     </p>
                   </div>
                 )}
 
                 {hasContent(simplifiedContent.simplifiedMarkdown) ? (
-                  <div className="p-6 bg-white border border-gray-200 rounded-lg">
-                    <h4 className="font-bold text-gray-800 text-xl mb-6">Detailed Explanation</h4>
+                  <div className="p-6 bg-white border border-gray-300 rounded-lg">
+                    <h4 className="font-bold text-gray-900 text-xl mb-6">Detailed Explanation</h4>
                     <div
-                      className="text-gray-700 leading-relaxed text-lg prose prose-lg max-w-none"
+                      className="text-gray-800 leading-relaxed text-lg prose prose-lg max-w-none"
                       dangerouslySetInnerHTML={renderMarkdown(simplifiedContent.simplifiedMarkdown)}
                     />
                   </div>
                 ) : simplifiedContent.simplified ? (
-                  <div className="p-6 bg-white border border-gray-200 rounded-lg">
-                    <h4 className="font-bold text-gray-800 text-xl mb-6">Detailed Explanation</h4>
-                    <p className="text-gray-700 text-lg leading-relaxed whitespace-pre-line">
+                  <div className="p-6 bg-white border border-gray-300 rounded-lg">
+                    <h4 className="font-bold text-gray-900 text-xl mb-6">Detailed Explanation</h4>
+                    <p className="text-gray-800 text-lg leading-relaxed whitespace-pre-line">
                       {simplifiedContent.simplified}
                     </p>
                   </div>
                 ) : (
-                  <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-yellow-700 text-lg">
+                  <div className="p-6 bg-gray-100 border border-gray-400 rounded-lg">
+                    <p className="text-gray-700 text-lg">
                       Detailed explanation is being prepared. Please check back shortly.
                     </p>
                   </div>
@@ -400,9 +400,9 @@ export function ResultsModal({
 
             {/* Patient Outcome Form */}
             {showOutcomeForm && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-                <h3 className="text-xl font-bold text-green-800 mb-4">Patient Outcome Record</h3>
-                <p className="text-green-700 mb-4">
+              <div className="bg-gray-50 border border-gray-300 rounded-lg p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Patient Outcome Record</h3>
+                <p className="text-gray-800 mb-4">
                   Please select the patient's outcome based on the diagnosis and treatment:
                 </p>
                 <div className="grid gap-4">
@@ -410,7 +410,7 @@ export function ResultsModal({
                     {["cured", "improved", "referred", "ongoing"].map((outcome) => (
                       <label
                         key={outcome}
-                        className="flex flex-col items-center p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:bg-green-50 transition-colors has-[:checked]:bg-green-100 has-[:checked]:border-green-500"
+                        className="flex flex-col items-center p-4 border-2 border-gray-400 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors has-[:checked]:bg-gray-200 has-[:checked]:border-gray-700"
                         onClick={(e) => handleOutcomeClick(e, outcome)}
                       >
                         <input
@@ -424,10 +424,10 @@ export function ResultsModal({
                           }}
                           className="sr-only"
                         />
-                        <div className="w-6 h-6 rounded-full border-2 border-gray-400 mb-2 flex items-center justify-center">
-                          {patientOutcome === outcome && <div className="w-3 h-3 rounded-full bg-green-600"></div>}
+                        <div className="w-6 h-6 rounded-full border-2 border-gray-500 mb-2 flex items-center justify-center">
+                          {patientOutcome === outcome && <div className="w-3 h-3 rounded-full bg-black"></div>}
                         </div>
-                        <span className="font-semibold text-gray-800 capitalize">{outcome}</span>
+                        <span className="font-semibold text-gray-900 capitalize">{outcome}</span>
                       </label>
                     ))}
                   </div>
@@ -435,7 +435,7 @@ export function ResultsModal({
                     <button
                       onClick={handleOutcomeSubmit}
                       disabled={savingOutcome}
-                      className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-6 py-3 text-white font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="inline-flex items-center gap-2 rounded-lg bg-black px-6 py-3 text-white font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       {savingOutcome ? (
                         <>
@@ -477,16 +477,16 @@ export function ResultsModal({
           </div>
 
           {/* Footer with action buttons */}
-          <div className="sticky bottom-0 bg-gray-50 border-t px-6 py-4 flex gap-3 justify-end flex-shrink-0">
+          <div className="sticky bottom-0 bg-gray-100 border-t border-gray-300 px-6 py-4 flex gap-3 justify-end flex-shrink-0">
             <button
               onClick={handleClose}
-              className="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-colors"
+              className="px-6 py-2 rounded-lg border border-gray-400 text-gray-800 font-semibold hover:bg-gray-200 transition-colors"
             >
               Close
             </button>
             <button
               onClick={onNavigateToChat}
-              className="inline-flex items-center gap-3 rounded-lg bg-green-600 px-6 py-2 text-white font-semibold hover:bg-green-700 transition-colors"
+              className="inline-flex items-center gap-3 rounded-lg bg-black px-6 py-2 text-white font-semibold hover:bg-gray-800 transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
