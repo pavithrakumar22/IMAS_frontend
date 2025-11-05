@@ -25,17 +25,15 @@ export function RecentCases({ cases }: { cases: CaseItem[] }) {
   }
 
   const handlePatientClick = (caseItem: CaseItem) => {
-    // Prepare URL parameters for the medical form in /chat page
     console.log('Patient clicked:', caseItem)
     const params = new URLSearchParams({
       name: caseItem.patient || '',
       disease: caseItem.condition || '',
       ...(caseItem.age && { age: caseItem.age.toString() }),
       ...(caseItem.gender && { gender: caseItem.gender }),
-      autoSubmit: 'false' // Just pre-fill, don't auto-submit
+      autoSubmit: 'false' 
     })
 
-    // Redirect to /chat page with patient data as URL parameters
     router.push(`/chat?${params.toString()}`)
   }
 
@@ -125,7 +123,6 @@ export function RecentCases({ cases }: { cases: CaseItem[] }) {
           </ul>
         </div>
 
-        {/* Load More / Show Less Controls */}
         {(hasMoreCases || canShowLess) && (
           <div className="mt-4 flex justify-center border-t pt-4">
             <div className="flex gap-2">
@@ -155,7 +152,6 @@ export function RecentCases({ cases }: { cases: CaseItem[] }) {
           </div>
         )}
 
-        {/* Empty State */}
         {cases.length === 0 && (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <div className="rounded-full bg-muted p-3 mb-3">

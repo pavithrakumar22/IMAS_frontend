@@ -35,7 +35,6 @@ interface PreviousCasesModalProps {
 }
 
 export function PreviousCasesModal({ cases, onSelectCase, onClose }: PreviousCasesModalProps) {
-  // EXACT SAME markdown rendering as ResultsModal
   const renderMarkdown = (content: string) => {
     if (!content) return { __html: '' }
 
@@ -88,7 +87,6 @@ export function PreviousCasesModal({ cases, onSelectCase, onClose }: PreviousCas
     return { __html: `<div class="space-y-4">${html}</div>` }
   }
 
-  // EXACT SAME content cleaning as ResultsModal
   const cleanSimplifiedContent = (content: string) => {
     if (!content) return ''
 
@@ -103,7 +101,6 @@ export function PreviousCasesModal({ cases, onSelectCase, onClose }: PreviousCas
       .trim()
   }
 
-  // Get limited diagnosis preview (first 150 characters)
   const getDiagnosisPreview = (diagnosis: string) => {
     if (!diagnosis) return "No diagnosis available"
     
@@ -115,7 +112,6 @@ export function PreviousCasesModal({ cases, onSelectCase, onClose }: PreviousCas
     return plainText.substring(0, 150) + '...'
   }
 
-  // Get all diseases sorted by date (newest first)
   const getAllDiseasesSorted = (caseData: CaseData): DiseaseData[] => {
     if (caseData.diseases && caseData.diseases.length > 0) {
       return [...caseData.diseases].sort((a, b) => 
@@ -123,7 +119,6 @@ export function PreviousCasesModal({ cases, onSelectCase, onClose }: PreviousCas
       )
     }
     
-    // Fallback to legacy fields as a single disease entry
     return [{
       name: caseData.Lastdisease || 'Unknown Condition',
       diagnosis: caseData.diagnosis || caseData.Lastdiagnosis || 'No diagnosis available',
@@ -166,7 +161,6 @@ export function PreviousCasesModal({ cases, onSelectCase, onClose }: PreviousCas
     }
   }
 
-  // Format date for display
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -210,7 +204,6 @@ export function PreviousCasesModal({ cases, onSelectCase, onClose }: PreviousCas
             </button>
           </div>
 
-          {/* Content Area */}
           <div className="overflow-y-auto flex-1 p-6 bg-white">
             {cases.length === 0 ? (
               <div className="text-center py-12">
@@ -272,7 +265,6 @@ export function PreviousCasesModal({ cases, onSelectCase, onClose }: PreviousCas
                         </div>
                       </div>
 
-                      {/* Diseases List */}
                       <div className="p-6">
                         <div className="space-y-4">
                           {allDiseases.map((disease, index) => (
@@ -303,7 +295,6 @@ export function PreviousCasesModal({ cases, onSelectCase, onClose }: PreviousCas
                                 </div>
                               </div>
 
-                              {/* Diagnosis Preview */}
                               <div className="bg-white rounded-lg p-4 border border-gray-300 shadow-sm">
                                 <div className="flex items-center gap-2 mb-3">
                                   <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -330,7 +321,6 @@ export function PreviousCasesModal({ cases, onSelectCase, onClose }: PreviousCas
                                 )}
                               </div>
 
-                              {/* Translated Disease Name (if available) */}
                               {disease.nameTranslated && disease.nameTranslated !== disease.name && (
                                 <div className="mt-3 text-xs text-gray-600 bg-gray-50 px-3 py-2 rounded-lg border border-gray-300">
                                   <span className="font-medium text-gray-800">Translated Diagnosis:</span> {disease.nameTranslated}
@@ -340,7 +330,6 @@ export function PreviousCasesModal({ cases, onSelectCase, onClose }: PreviousCas
                           ))}
                         </div>
 
-                        {/* Patient Summary */}
                         <div className="mt-6 pt-4 border-t border-gray-300">
                           <div className="flex items-center justify-between text-sm text-gray-700">
                             <span className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full border border-gray-400">
@@ -365,7 +354,6 @@ export function PreviousCasesModal({ cases, onSelectCase, onClose }: PreviousCas
             )}
           </div>
 
-          {/* Footer */}
           <div className="sticky bottom-0 bg-gray-50 border-t border-gray-300 px-6 py-4 flex justify-between items-center rounded-b-lg">
             <div className="text-sm text-gray-700 flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -39,12 +39,10 @@ export function ResultsModal({
     }
   }, [])
 
-  // Helper to check if content exists
   const hasContent = (content: any) => {
     return content && content.length > 0 && content !== "null" && content !== "undefined"
   }
 
-  // Simple markdown rendering
   const renderMarkdown = (content: string) => {
     if (!content) return null
 
@@ -97,7 +95,6 @@ export function ResultsModal({
     return { __html: `<div class="space-y-4">${html}</div>` }
   }
 
-  // Get simplified content
   const getSimplifiedContent = () => {
     if (!result) return { simplified: "", simplifiedMarkdown: "", originalDiagnosisMarkdown: "" }
 
@@ -116,7 +113,6 @@ export function ResultsModal({
     }
   }
 
-  // Clean simplified content
   const cleanSimplifiedContent = (content: string) => {
     if (!content) return ""
 
@@ -131,7 +127,6 @@ export function ResultsModal({
       .trim()
   }
 
-  // Get complexity level
   const getComplexityLevel = () => {
     if (!result?.complexity) return "UNKNOWN"
 
@@ -141,7 +136,6 @@ export function ResultsModal({
     return result.complexity.complexity || result.complexity.level || "UNKNOWN"
   }
 
-  // Get complexity reason
   const getComplexityReason = () => {
     if (!result?.complexity) return ""
 
@@ -151,7 +145,6 @@ export function ResultsModal({
     return result.complexity.reason || ""
   }
 
-  // Get complexity color
   const getComplexityColor = (level: string) => {
     switch (level?.toUpperCase()) {
       case "HIGH":
@@ -165,12 +158,10 @@ export function ResultsModal({
     }
   }
 
-  // Check if emergency
   const isEmergency = () => {
     return result?.diagnosis?.isEmergency || result?.complexity?.complexity === "HIGH"
   }
 
-  // Get immediate actions
   const getImmediateActions = () => {
     return result?.diagnosis?.immediateActions || ""
   }
@@ -183,7 +174,6 @@ export function ResultsModal({
   const showSimplified = responseType === "simplified" || responseType === "both"
   const showOriginal = responseType === "original" || responseType === "both"
 
-  // FIX: Prevent modal close when clicking inside
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       handleClose()
@@ -198,14 +188,12 @@ export function ResultsModal({
     onClose()
   }
 
-  // FIX: Prevent event propagation for outcome buttons
   const handleOutcomeClick = (e: React.MouseEvent, outcome: string) => {
     e.stopPropagation()
     e.preventDefault()
     onOutcomeChange(outcome)
   }
 
-  // FIX: Handle outcome submit properly
   const handleOutcomeSubmit = (e: React.MouseEvent) => {
     e.stopPropagation()
     e.preventDefault()
@@ -228,7 +216,6 @@ export function ResultsModal({
           className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col border border-gray-300"
           onClick={(e) => e.stopPropagation()} // FIX: Prevent click propagation
         >
-          {/* Header */}
           <div className="sticky top-0 bg-black px-6 py-4 flex items-center justify-between border-b border-gray-700 flex-shrink-0">
             <div>
               <h2 className="text-2xl font-bold text-white">Medical Analysis Results</h2>
@@ -245,9 +232,7 @@ export function ResultsModal({
             </button>
           </div>
 
-          {/* Content - Scrollable */}
           <div className="overflow-y-auto flex-1 p-6 space-y-6" style={{ overscrollBehavior: "contain" }}>
-            {/* Emergency Alert */}
             {isEmergencyCase && (
               <div className="bg-gray-100 border border-gray-400 rounded-lg p-6">
                 <div className="flex items-center gap-4">
@@ -277,7 +262,6 @@ export function ResultsModal({
               </div>
             )}
 
-            {/* Complexity Badge */}
             {complexityLevel && !isEmergencyCase && (
               <div className="bg-gray-100 border border-gray-300 rounded-lg p-6">
                 <div className="flex items-center gap-4">
@@ -293,7 +277,6 @@ export function ResultsModal({
               </div>
             )}
 
-            {/* Tabs for diagnosis and simplified */}
             {showOriginal && showSimplified && (
               <div className="flex gap-2 border-b border-gray-300">
                 <button
@@ -319,7 +302,6 @@ export function ResultsModal({
               </div>
             )}
 
-            {/* Diagnosis Tab */}
             {(activeTab === "diagnosis" || !showSimplified) && showOriginal && (
               <div className="rounded-lg border border-gray-300 bg-white p-6">
                 <div className="flex items-center gap-4 mb-6">
@@ -347,7 +329,6 @@ export function ResultsModal({
               </div>
             )}
 
-            {/* Simplified Tab */}
             {(activeTab === "simplified" || !showOriginal) && showSimplified && (
               <div className="rounded-lg border border-gray-300 bg-white p-6">
                 <div className="flex items-center gap-4 mb-6">
@@ -398,7 +379,6 @@ export function ResultsModal({
               </div>
             )}
 
-            {/* Patient Outcome Form */}
             {showOutcomeForm && (
               <div className="bg-gray-50 border border-gray-300 rounded-lg p-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-4">Patient Outcome Record</h3>
@@ -476,7 +456,6 @@ export function ResultsModal({
             )}
           </div>
 
-          {/* Footer with action buttons */}
           <div className="sticky bottom-0 bg-gray-100 border-t border-gray-300 px-6 py-4 flex gap-3 justify-end flex-shrink-0">
             <button
               onClick={handleClose}

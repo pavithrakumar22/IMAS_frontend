@@ -18,7 +18,6 @@ import { currentUser } from "@clerk/nextjs/server"
 import Link from "next/link"
 
 export default async function HomePage() {
-  // Get the current user to handle authentication state
   const user = await currentUser()
 
   const agents = [
@@ -92,7 +91,6 @@ export default async function HomePage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
@@ -135,7 +133,6 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
             <div className="text-center">
               <div className="flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mx-auto mb-4">
@@ -162,7 +159,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* AI Agents Pipeline */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -199,7 +195,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Features */}
       <section className="py-20 bg-gradient-to-r from-blue-50 to-green-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -244,7 +239,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-blue-600 to-green-600">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Ready to Transform Rural Healthcare?</h2>
@@ -268,7 +262,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center">

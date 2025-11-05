@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { Calendar, User, AlertTriangle, FileText, Stethoscope } from "lucide-react"
 import { FullDiagnosisModal } from "./full-diagnosis-modal"
-import type { PatientData, DiseaseData } from "./types"
+import type { PatientData, DiseaseData } from "./type"
 
 interface CasesDisplayProps {
   patients: PatientData[]
@@ -40,7 +40,6 @@ export function CasesDisplay({
     }> = []
 
     patients.forEach((patient) => {
-      // Filter by patient name if patient filter is set
       if (patientFilter !== "all" && patient.patientId !== patientFilter) {
         return
       }
@@ -63,20 +62,17 @@ export function CasesDisplay({
       }
     })
 
-    // Sort by treatment date descending
     return cases.sort(
       (a, b) => new Date(b.disease.treatmentDate).getTime() - new Date(a.disease.treatmentDate).getTime(),
     )
   }, [patients, statusFilter, complexityFilter, diseaseFilter, patientFilter])
 
-  // Update all cases when filters change
   useEffect(() => {
     const cases = getAllCases()
     setAllCases(cases)
-    setVisibleCases(5) // Reset to first 5 when filters change
+    setVisibleCases(5) 
   }, [getAllCases])
 
-  // Infinite scroll handler
   useEffect(() => {
     const handleScroll = () => {
       if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 100) {
@@ -203,7 +199,6 @@ export function CasesDisplay({
             key={index} 
             className="border border-gray-300 rounded-lg bg-white hover:shadow-md transition-all hover:border-gray-400"
           >
-            {/* Case Header */}
             <div className="bg-gray-50 px-6 py-4 border-b border-gray-300 rounded-t-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 flex-wrap">
@@ -229,10 +224,8 @@ export function CasesDisplay({
               </div>
             </div>
 
-            {/* Case Details */}
             <div className="p-6">
               <div className="space-y-4">
-                {/* Condition Header */}
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-3 flex-wrap">
@@ -258,7 +251,6 @@ export function CasesDisplay({
                       </div>
                     </div>
                     
-                    {/* Patient ID */}
                     <div className="flex items-center gap-4 text-sm text-gray-700 mb-4">
                       <span className="flex items-center gap-1 bg-gray-100 px-3 py-1 rounded-full border border-gray-300">
                         <User className="w-3 h-3" />
@@ -268,7 +260,6 @@ export function CasesDisplay({
                   </div>
                 </div>
 
-                {/* Diagnosis Preview */}
                 <div className="bg-white rounded-lg p-4 border border-gray-300">
                   <div className="flex items-center gap-2 mb-3">
                     <FileText className="w-4 h-4 text-gray-700" />
@@ -288,7 +279,6 @@ export function CasesDisplay({
                   </button>
                 </div>
 
-                {/* Translated Disease Name */}
                 {caseItem.disease.nameTranslated && caseItem.disease.nameTranslated !== caseItem.disease.name && (
                   <div className="mt-2 text-xs text-gray-600 bg-gray-50 px-3 py-2 rounded-lg border border-gray-300">
                     <span className="font-medium text-gray-800">Translated Diagnosis:</span> {caseItem.disease.nameTranslated}
@@ -300,7 +290,6 @@ export function CasesDisplay({
         ))}
       </div>
 
-      {/* Load More Indicator */}
       {hasMoreCases && (
         <div className="text-center py-8">
           <div className="flex items-center justify-center gap-2 text-gray-600">
@@ -313,7 +302,6 @@ export function CasesDisplay({
         </div>
       )}
 
-      {/* Show message when all cases are loaded */}
       {!hasMoreCases && allCases.length > 5 && (
         <div className="text-center py-6">
           <p className="text-sm text-gray-600 font-medium">
@@ -322,7 +310,6 @@ export function CasesDisplay({
         </div>
       )}
 
-      {/* Full Diagnosis Modal */}
       {selectedDisease && (
         <FullDiagnosisModal
           disease={selectedDisease.disease}

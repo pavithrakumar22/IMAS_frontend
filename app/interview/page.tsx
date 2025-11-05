@@ -33,7 +33,6 @@ export default function InterviewPage() {
   const [interviewKey, setInterviewKey] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Fetch practice questions only when on questions step
   const { data: questionsData } = useSWR<{
     success: boolean;
     sessionId: string;
@@ -61,7 +60,6 @@ export default function InterviewPage() {
 
   const questions = useMemo(() => questionsData?.questions ?? [], [questionsData])
 
-  // Function to update interview status in database
   const updateInterviewStatus = async (passed: boolean) => {
     try {
       if (!clerkUser) {
@@ -106,7 +104,6 @@ export default function InterviewPage() {
         throw new Error("User not authenticated")
       }
 
-      // Update user profile in database
       const updateResponse = await fetch("http://localhost:5000/api/auth/update-user", {
         method: "PATCH",
         headers: {
@@ -145,14 +142,12 @@ export default function InterviewPage() {
       setAnswers(collectedAnswers)
       setIsSubmitting(true)
 
-      // Extract just the answer texts for evaluation
       const answerTexts = collectedAnswers.map(a => a.answer);
 
       console.log("=== DEBUG EVALUATION ===");
       console.log("Session ID from state:", sessionId);
       console.log("Answers count:", answerTexts.length);
 
-      // Check if sessionId is valid
       if (!sessionId || sessionId.length === 0) {
         console.error("ERROR: sessionId is empty!");
         throw new Error("Session ID is missing. Please refresh and try again.");
@@ -193,7 +188,6 @@ export default function InterviewPage() {
       const averageScore = parseFloat(evaluationResult.summary?.averageScore) || 0;
       const passed = averageScore >= 7;
 
-      // Update database with interview result
       await updateInterviewStatus(passed);
 
       setResult({
@@ -206,7 +200,6 @@ export default function InterviewPage() {
 
       setStep("result");
 
-      // Auto-redirect to dashboard if passed after 3 seconds
       if (passed) {
         setTimeout(() => {
           router.push("/dashboard");
@@ -233,7 +226,6 @@ export default function InterviewPage() {
   function retryInterview() {
     console.log("Retrying interview...");
     
-    // Reset all states
     setStep("profile");
     setResult(null);
     setAnswers([]);
@@ -241,10 +233,8 @@ export default function InterviewPage() {
     setProfile(null);
     setIsSubmitting(false);
     
-    // Increment the key to force SWR to re-fetch questions
     setInterviewKey(prev => prev + 1);
     
-    // Clear SWR cache for the questions
     mutate('/interview/practice-questions', undefined, { revalidate: false });
     
     console.log("Interview reset complete, ready for new session");
@@ -252,7 +242,7 @@ export default function InterviewPage() {
 
   return (
     <main className="min-h-dvh p-6 flex items-center justify-center">
-      <Card className="w-full max-w-4xl"> {/* Increased max width */}
+      <Card className="w-full max-w-4xl"> 
         {step === "profile" && (
           <>
             <CardHeader>

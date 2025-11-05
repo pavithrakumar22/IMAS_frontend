@@ -22,5 +22,5 @@ export function UserSync() {
     syncUserData()
   }, [user, isLoaded])
 
-  return null // This component doesn't render anything
+  return null 
 }

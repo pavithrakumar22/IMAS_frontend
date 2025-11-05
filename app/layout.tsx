@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
-import "./globals.css"
+import "./global.css"
 import { ClerkProvider } from "@clerk/nextjs"
 import { UserSync } from "@/components/user-sync"
 

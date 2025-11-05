@@ -19,12 +19,10 @@ export default clerkMiddleware(async (auth, request) => {
   const { userId } = await auth();
   const currentPath = request.nextUrl.pathname;
 
-  // Block logged-in users from accessing /role-select
   if (userId && currentPath === '/role-select') {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  // Allow access to public routes for non-logged-in users
   if (!userId && isPublicRoute(request)) {
     return NextResponse.next();
   }
@@ -37,24 +35,20 @@ export default clerkMiddleware(async (auth, request) => {
         const interviewPassed = await response.json();
         
         if (!interviewPassed) {
-          // User hasn't passed interview
           if (currentPath.startsWith('/interview')) {
             return NextResponse.next();
           }
           if (isProtectedRoute(request)) {
             return NextResponse.redirect(new URL('/interview', request.url));
           }
-          // Allow access to root route even if interview not passed
           if (currentPath === '/') {
             return NextResponse.next();
           }
         } 
         else {
-          // User has passed interview
           if (currentPath.startsWith('/interview') || currentPath === '/role-select') {
             return NextResponse.redirect(new URL('/dashboard', request.url));
           }
-          // Allow access to root route even if interview passed
           if (currentPath === '/') {
             return NextResponse.next();
           }
@@ -65,7 +59,6 @@ export default clerkMiddleware(async (auth, request) => {
     }
   } 
   else {
-    // User not logged in
     if (currentPath.startsWith('/interview')) {
       return NextResponse.next();
     }
@@ -74,7 +67,6 @@ export default clerkMiddleware(async (auth, request) => {
     }
   }
 
-  // Protect other routes
   if (isProtectedRoute(request)) {
     auth().protect();
   }

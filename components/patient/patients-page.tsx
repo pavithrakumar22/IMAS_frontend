@@ -86,7 +86,6 @@ export default function PatientsPage() {
     return matchesSearch && matchesPatientFilter
   })
 
-  // Show loading while Clerk is initializing
   if (!isLoaded) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -98,7 +97,6 @@ export default function PatientsPage() {
     )
   }
 
-  // Show error if user is not authenticated
   if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -135,14 +133,12 @@ export default function PatientsPage() {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="mx-auto max-w-7xl">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight">Medical Cases</h1>
           <p className="text-muted-foreground mt-2">View and manage all patient medical cases and diagnoses</p>
           <div className="mt-2 text-sm text-muted-foreground">Welcome, {user.firstName || user.username}</div>
         </div>
 
-        {/* Filters and Search */}
         <Card className="mb-6">
           <CardContent className="p-6">
             <PatientsFilters

@@ -10,7 +10,6 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Fetch user data from your Express backend
     const userResponse = await fetch(`http://localhost:5000/api/auth/me`, {
       headers: {
         'x-clerk-user-id': clerkUser.id
@@ -24,23 +23,19 @@ export async function GET() {
     const userData = await userResponse.json()
     const user = userData.user
 
-    // Sort patients by LasttreatmentDate (most recent first)
     const sortedPatients = user.patients?.sort((a, b) => 
       new Date(b.LasttreatmentDate || 0) - new Date(a.LasttreatmentDate || 0)
     ) || [];
 
-    // Calculate stats from your actual data
     const totalPatients = sortedPatients.length;
     const successfulCases = user.successfulCases || 0;
     const successRate = user.successRate || 0;
 
-    // Calculate complexity distribution
     let lowComplexityCases = 0;
     let mediumComplexityCases = 0;
     let highComplexityCases = 0;
 
     sortedPatients.forEach(patient => {
-      // Check diseases array first, then fall back to Lastcomplexity
       if (patient.diseases && patient.diseases.length > 0) {
         patient.diseases.forEach(disease => {
           if (disease.complexity === 'low') lowComplexityCases++;
@@ -48,7 +43,6 @@ export async function GET() {
           else if (disease.complexity === 'high') highComplexityCases++;
         });
       } else {
-        // Use legacy complexity field
         if (patient.Lastcomplexity === 'low') lowComplexityCases++;
         else if (patient.Lastcomplexity === 'medium') mediumComplexityCases++;
         else if (patient.Lastcomplexity === 'high') highComplexityCases++;
@@ -62,7 +56,6 @@ export async function GET() {
     let patientsOngoing = 0;
 
     sortedPatients.forEach(patient => {
-      // Check diseases array first, then fall back to Lastoutcome
       if (patient.diseases && patient.diseases.length > 0) {
         patient.diseases.forEach(disease => {
           if (disease.outcome === 'cured') patientsCured++;
@@ -71,7 +64,6 @@ export async function GET() {
           else if (disease.outcome === 'ongoing') patientsOngoing++;
         });
       } else {
-        // Use legacy outcome field
         if (patient.Lastoutcome === 'cured') patientsCured++;
         else if (patient.Lastoutcome === 'improved') patientsImproved++;
         else if (patient.Lastoutcome === 'referred') patientsReferred++;
@@ -106,7 +98,6 @@ export async function GET() {
       };
     });
 
-    // Overall History
     const overallHistory = sortedPatients.map(patient => {
       const primaryDisease = patient.diseases && patient.diseases.length > 0 
         ? patient.diseases[patient.diseases.length - 1]
@@ -127,8 +118,6 @@ export async function GET() {
         gender: patient.gender || "Not specified" // Add gender field
       };
     });
-
-    // Build final payload
     const payload = {
       stats: {
         patientsCured: patientsCured,
@@ -189,7 +178,6 @@ export async function GET() {
   }
 }
 
-// Helper functions
 function getStatusFromOutcome(outcome) {
   switch (outcome) {
     case 'cured':

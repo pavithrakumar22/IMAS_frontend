@@ -33,7 +33,6 @@ export default function QuestionsRunner({
   const loading = !questions || questions.length === 0
 
   useEffect(() => {
-    // reset current answer when index changes
     const q = questions[idx]
     setCurrentValue(q ? (answers[q.id] ?? "") : "")
   }, [idx, questions, answers])
@@ -53,7 +52,6 @@ export default function QuestionsRunner({
         questionId: q.id,
         answer: ((prevAnswers) => prevAnswers[q.id] ?? "")(answers),
       }))
-      // ensure last answer is included
       out[out.length - 1] = { questionId: current.id, answer: trimmed }
       onComplete(out)
     }
@@ -65,12 +63,10 @@ export default function QuestionsRunner({
     }
   }
 
-  // Check if all questions are answered
   const allQuestionsAnswered = useMemo(() => {
     if (questions.length === 0) return false
     
     const currentAnswers = { ...answers }
-    // Include the current value being typed
     if (current) {
       currentAnswers[current.id] = currentValue
     }
@@ -126,7 +122,6 @@ export default function QuestionsRunner({
         </div>
       </div>
       
-      {/* Navigation Buttons */}
       <div className="flex justify-between items-center pt-6 border-t">
         <Button 
           variant="outline" 
@@ -173,7 +168,6 @@ export default function QuestionsRunner({
         </div>
       </div>
       
-      {/* Submission Status */}
       {isSubmitting && (
         <div className="text-center py-4 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p className="text-sm text-yellow-800 font-medium">
@@ -182,7 +176,6 @@ export default function QuestionsRunner({
         </div>
       )}
       
-      {/* Progress Summary */}
       <div className="text-center text-sm text-muted-foreground">
         {idx + 1} of {questions.length} questions completed
         {allQuestionsAnswered && !isSubmitting && idx === questions.length - 1 && (
@@ -192,155 +185,3 @@ export default function QuestionsRunner({
     </div>
   )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// "use client"
-
-// import { useEffect, useMemo, useState } from "react"
-// import { Button } from "@/components/ui/button"
-// import { Input } from "@/components/ui/input"
-// import { Label } from "@/components/ui/label"
-// import { Skeleton } from "@/components/ui/skeleton"
-
-// export type Question = {
-//   id: string
-//   text: string
-//   type?: "short" | "number"
-// }
-
-// export type AnswerRecord = {
-//   questionId: string
-//   answer: string
-// }
-
-// export default function QuestionsRunner({
-//   questions,
-//   onComplete,
-//   isSubmitting = false, // Add this prop
-// }: {
-//   questions: Question[]
-//   onComplete: (answers: AnswerRecord[]) => void
-//   isSubmitting?: boolean // Add this type
-// }) {
-//   const [idx, setIdx] = useState(0)
-//   const [answers, setAnswers] = useState<Record<string, string>>({})
-//   const [currentValue, setCurrentValue] = useState("")
-
-//   const loading = !questions || questions.length === 0
-
-//   useEffect(() => {
-//     // reset current answer when index changes
-//     const q = questions[idx]
-//     setCurrentValue(q ? (answers[q.id] ?? "") : "")
-//   }, [idx, questions, answers])
-
-//   const current = useMemo(() => questions[idx], [questions, idx])
-
-//   function handleNext() {
-//     if (!current || isSubmitting) return // Prevent action if submitting
-    
-//     const trimmed = currentValue.trim()
-//     setAnswers((prev) => ({ ...prev, [current.id]: trimmed }))
-    
-//     if (idx < questions.length - 1) {
-//       setIdx((i) => i + 1)
-//     } else {
-//       const out: AnswerRecord[] = questions.map((q) => ({
-//         questionId: q.id,
-//         answer: ((prevAnswers) => prevAnswers[q.id] ?? "")(answers),
-//       }))
-//       // ensure last answer is included
-//       out[out.length - 1] = { questionId: current.id, answer: trimmed }
-//       onComplete(out)
-//     }
-//   }
-
-//   // Check if all questions are answered
-//   const allQuestionsAnswered = useMemo(() => {
-//     if (questions.length === 0) return false
-    
-//     const currentAnswers = { ...answers }
-//     // Include the current value being typed
-//     if (current) {
-//       currentAnswers[current.id] = currentValue
-//     }
-    
-//     return questions.every(q => currentAnswers[q.id]?.trim().length > 0)
-//   }, [answers, currentValue, current, questions])
-
-//   if (loading) {
-//     return (
-//       <div className="space-y-4">
-//         <Skeleton className="h-6 w-2/3" />
-//         <Skeleton className="h-10 w-full" />
-//         <div className="flex justify-end">
-//           <Skeleton className="h-9 w-24" />
-//         </div>
-//       </div>
-//     )
-//   }
-
-//   return (
-//     <div className="space-y-4">
-//       <div className="grid gap-2">
-//         <Label className="text-sm">
-//           Question {idx + 1} of {questions.length}
-//         </Label>
-//         <p className="text-lg">{current?.text}</p>
-//       </div>
-//       <Input
-//         value={currentValue}
-//         onChange={(e) => setCurrentValue(e.target.value)}
-//         placeholder="Type your answer"
-//         aria-label="Answer"
-//         disabled={isSubmitting} // Disable input when submitting
-//       />
-//       <div className="flex justify-end">
-//         <Button 
-//           onClick={handleNext} 
-//           disabled={!currentValue.trim() || isSubmitting} // Disable if no answer or submitting
-//         >
-//           {isSubmitting ? (
-//             <>
-//               <span className="animate-spin mr-2">⏳</span>
-//               Submitting...
-//             </>
-//           ) : idx < questions.length - 1 ? (
-//             "Next"
-//           ) : (
-//             "Submit All Answers"
-//           )}
-//         </Button>
-//       </div>
-      
-//       {/* Progress indicator */}
-//       {isSubmitting && (
-//         <div className="text-center text-sm text-muted-foreground">
-//           Evaluating your answers... Please wait.
-//         </div>
-//       )}
-//     </div>
-//   )
-// }

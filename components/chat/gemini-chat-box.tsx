@@ -10,7 +10,7 @@ type ChatMessage = {
   content: string
 }
 
-const GEMINI_CHAT_API = process.env.NEXT_PUBLIC_GEMINI_CHAT_API || "" // e.g., "http://localhost:3001/gemini-chat"
+const GEMINI_CHAT_API = process.env.NEXT_PUBLIC_GEMINI_CHAT_API || ""
 
 export default function GeminiChatBox() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -39,7 +39,6 @@ export default function GeminiChatBox() {
     setLoading(true)
 
     try {
-      // Simple protocol: POST { message, history } → { reply }
       const res = await fetch(GEMINI_CHAT_API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

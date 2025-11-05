@@ -528,13 +528,11 @@ export default function MedicalQueryForm() {
   return (
     <div className="w-full px-4 py-6">
       <div className="rounded-xl border border-gray-300 bg-white p-6 shadow-lg w-full">
-        {/* Header Section */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Medical Query Analysis</h1>
           <p className="text-gray-600 text-lg">Enter patient details and symptoms for AI-powered medical analysis</p>
         </div>
 
-        {/* Show notification when form was pre-filled */}
         {searchParams.get('name') && (
           <div className="mb-6 p-4 bg-gray-100 border border-gray-300 rounded-lg">
             <div className="flex items-center gap-3">
@@ -553,7 +551,6 @@ export default function MedicalQueryForm() {
           </div>
         )}
 
-        {/* Action Buttons */}
         <div className="flex flex-wrap gap-3 mb-6 justify-center">
           <button
             type="button"
@@ -589,7 +586,6 @@ export default function MedicalQueryForm() {
           </button>
         </div>
 
-        {/* Selected Patient Indicator */}
         {selectedPatientId && (
           <div className="mb-6 p-4 bg-gray-100 border border-gray-300 rounded-lg">
             <div className="flex items-center gap-2">
@@ -610,7 +606,6 @@ export default function MedicalQueryForm() {
           </div>
         )}
 
-        {/* Main Form */}
         <form onSubmit={onSubmit} className="grid gap-6 mb-8 max-w-4xl mx-auto w-full">
           {/* Basic Information */}
           <div className="bg-white rounded-xl border border-gray-300 p-6 shadow-sm">
@@ -674,7 +669,6 @@ export default function MedicalQueryForm() {
             </div>
           </div>
 
-          {/* Medical History Section */}
           <div className="bg-gray-50 border border-gray-300 rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -826,7 +820,6 @@ export default function MedicalQueryForm() {
             )}
           </div>
 
-          {/* Symptoms/Query Section */}
           <div className="bg-white rounded-xl border border-gray-300 p-6 shadow-sm">
             <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
               <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -846,7 +839,6 @@ export default function MedicalQueryForm() {
             </div>
           </div>
 
-          {/* Response Type */}
           <div className="bg-white rounded-xl border border-gray-300 p-6 shadow-sm">
             <h3 className="text-xl font-bold text-gray-900 mb-4">Response Type</h3>
             <div className="flex flex-wrap gap-4">
@@ -886,7 +878,6 @@ export default function MedicalQueryForm() {
             </div>
           </div>
 
-          {/* Submit Button */}
           <div className="flex flex-col sm:flex-row items-center gap-4 justify-center">
             <button
               type="submit"
@@ -936,7 +927,6 @@ export default function MedicalQueryForm() {
           </div>
         </form>
 
-        {/* Additional Actions */}
         <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
           {showSavedResultsButton && savedResults && (
             <button
@@ -974,7 +964,6 @@ export default function MedicalQueryForm() {
         </div>
       </div>
 
-      {/* Patient Selector Modal */}
       {showPatientSelector && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col border border-gray-300">
@@ -1054,7 +1043,6 @@ export default function MedicalQueryForm() {
         </div>
       )}
 
-      {/* Results Modal */}
       {result && showModal && (
         <ResultsModal
           result={result}
@@ -1071,7 +1059,6 @@ export default function MedicalQueryForm() {
         />
       )}
 
-      {/* Previous Cases Modal */}
       {showPreviousCasesModal && (
         <PreviousCasesModal
           cases={previousCases}

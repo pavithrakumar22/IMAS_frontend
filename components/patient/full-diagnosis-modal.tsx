@@ -5,7 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import { X, Calendar, User, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { DiseaseData } from "./types"
+import type { DiseaseData } from "./type"
 
 interface FullDiagnosisModalProps {
   disease: DiseaseData

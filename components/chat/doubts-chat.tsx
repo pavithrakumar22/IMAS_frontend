@@ -97,7 +97,6 @@ export default function DoubtsChat() {
 
   return (
     <section className="relative flex h-full min-h-full flex-col">
-      {/* Conversation: scrolls; chat stays full height */}
       <div
         ref={listRef}
         className={cx(
@@ -129,7 +128,6 @@ export default function DoubtsChat() {
         )}
       </div>
 
-      {/* Composer: sticky at the bottom */}
       <form
         onSubmit={handleSend}
         className="sticky bottom-0 z-10 mt-4 rounded-2xl border border-input bg-card shadow-sm"
@@ -152,7 +150,6 @@ export default function DoubtsChat() {
           />
 
           <div className="mt-3 flex items-center justify-end">
-            {/* Simple actions only */}
             <button
               type="button"
               className="mr-2 rounded-full border border-input px-3 py-2 text-sm text-muted-foreground"
