@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import type React from "react"
@@ -41,8 +42,8 @@ export default function MedicalQueryForm() {
   const [savedResults, setSavedResults] = useState<any>(null)
   const [showSavedResultsButton, setShowSavedResultsButton] = useState(false)
 
-  const [previousPatientReport, setPreviousPatientReport] = useState<any>(null)
-  const [previousPatientName, setPreviousPatientName] = useState<string>("")
+  const [previousPatientReport] = useState<any>(null)
+  const [previousPatientName] = useState<string>("")
 
   const [showPreviousCasesModal, setShowPreviousCasesModal] = useState(false)
   const [previousCases, setPreviousCases] = useState<any[]>([])
@@ -819,7 +820,6 @@ export default function MedicalQueryForm() {
               </div>
             )}
           </div>
-
           <div className="bg-white rounded-xl border border-gray-300 p-6 shadow-sm">
             <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
               <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -827,15 +827,56 @@ export default function MedicalQueryForm() {
               </svg>
               Current Symptoms / Medical Query
             </h3>
+
             <div className="grid gap-3">
               <textarea
                 id="disease"
-                className="min-h-40 rounded-lg border border-gray-400 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800 resize-vertical transition-all"
+                className={`min-h-40 rounded-lg border border-gray-400 bg-white px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800 resize-vertical transition-all ${loading ? "opacity-50 pointer-events-none" : ""}`}
                 placeholder="Describe your current symptoms, concerns, or medical questions in detail... (e.g., persistent cough for 3 days, fever, chest pain, shortness of breath)"
                 value={disease}
                 onChange={(e) => setDisease(e.target.value)}
                 required
+                disabled={loading}
               />
+
+              {/* <div className="flex justify-end mt-4">
+                <label
+                  htmlFor="audioUpload"
+                  className={`cursor-pointer inline-flex items-center gap-2 rounded-lg bg-gray-800 px-4 py-2 text-white font-semibold hover:bg-gray-700 transition-colors shadow-sm ${loading ? "opacity-60 pointer-events-none" : ""}`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6l4 2" />
+                  </svg>
+                  Upload Audio
+                </label>
+
+                <input
+                  id="audioUpload"
+                  type="file"
+                  accept="audio/*"
+                  className="hidden"
+                  onChange = {async (e) => {
+                    if (!e.target.files?.[0]) return;
+                    setLoading(true);
+                    const formData = new FormData();
+                    formData.append("audio", e.target.files[0]);
+                    try {
+                      const res = await fetch("http://localhost:5000/api/stt-and-classify", {
+                        method: "POST",
+                        body: formData,
+                      });
+                      if (!res.ok) throw new Error("Audio processing failed");
+                      const data = await res.json();
+                      if (data?.text) setDisease(data.text);
+                    } catch (err) {
+                      console.error(err);
+                      alert("Error processing audio");
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                />
+              </div> */}
             </div>
           </div>
 
@@ -1047,6 +1088,7 @@ export default function MedicalQueryForm() {
         <ResultsModal
           result={result}
           responseType={responseType}
+          patientName={name}
           showOutcomeForm={showOutcomeForm}
           patientOutcome={patientOutcome}
           savingOutcome={savingOutcome}

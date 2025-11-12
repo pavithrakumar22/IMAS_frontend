@@ -6,6 +6,7 @@ import { useState, useEffect } from "react"
 interface ResultsModalProps {
   result: any
   responseType: "simplified" | "original" | "both"
+  patientName: string
   showOutcomeForm: boolean
   patientOutcome: string
   savingOutcome: boolean
@@ -20,6 +21,7 @@ interface ResultsModalProps {
 export function ResultsModal({
   result,
   responseType,
+  patientName,
   showOutcomeForm,
   patientOutcome,
   savingOutcome,
@@ -98,16 +100,18 @@ export function ResultsModal({
   const getSimplifiedContent = () => {
     if (!result) return { simplified: "", simplifiedMarkdown: "", originalDiagnosisMarkdown: "" }
 
+    const cleanSimplified = (text: string) => cleanSimplifiedContent(text).trim();
+
     if (result.simplified && typeof result.simplified === "object") {
       return {
-        simplified: cleanSimplifiedContent(result.simplified.simplified || ""),
-        simplifiedMarkdown: cleanSimplifiedContent(result.simplified.simplifiedMarkdown || ""),
+        simplified: cleanSimplified(result.simplified.simplified || ""),
+        simplifiedMarkdown: cleanSimplified(result.simplified.simplifiedMarkdown || ""),
         originalDiagnosisMarkdown: result.simplified.originalDiagnosisMarkdown || "",
       }
     }
 
     return {
-      simplified: cleanSimplifiedContent(result.simplified || ""),
+      simplified: cleanSimplified(result.simplified || ""),
       simplifiedMarkdown: "",
       originalDiagnosisMarkdown: "",
     }
@@ -123,6 +127,7 @@ export function ResultsModal({
       .replace(/\*\*/g, "**")
       .replace(/\*/g, "*")
       .replace(/---\\n\\n\*\*2\./g, "")
+      .replace("*"," ")
       .replace(/$$formatted for easy reading$$:\*\*\\n\\n/g, "")
       .trim()
   }
@@ -200,6 +205,98 @@ export function ResultsModal({
     onOutcomeSubmit()
   }
 
+  const handleDownloadReport = async () => {
+    try {
+      if (!result) {
+        alert("No report data available to download.")
+        return
+      }
+
+      const payload = {
+        diagnosisData: result,
+        fileName: `${patientName.replace(/\s+/g, "_")}_medical_report`
+      }
+
+      const response = await fetch("http://localhost:5000/api/combined/report", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to generate report.")
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `${payload.fileName}.pdf`
+      link.click()
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error("Error downloading report:", error)
+      alert("Error downloading report. Please try again.")
+    }
+  }
+
+  const [selectedLang, setSelectedLang] = useState("");
+  const [translatedText, setTranslatedText] = useState("");
+  const [translating, setTranslating] = useState(false);
+  const [showTranslate, setShowTranslate] = useState(false)
+  
+
+  const handleTranslate = async () => {
+    if (!simplifiedContent.simplified) {
+      alert("No text available to translate.");
+      return;
+    }
+
+    if (selectedLang === "more") {
+      alert("More languages coming soon!");
+      return;
+    }
+
+    try {
+
+      const cleanText = simplifiedContent.simplified
+      .replace(/\*\*/g, "")
+      .replace(/(\r\n|\n|\r)/gm, " ")
+      .replace(/\s+/g, " ")
+      .replace('#'," ")
+      .trim();
+
+      setTranslating(true);
+      const formData = new FormData();
+      formData.append("text", cleanText);
+      formData.append("src", "eng");
+      formData.append("tgt", selectedLang);
+
+      console.log("Original: ", cleanText);
+
+      const response = await fetch("http://localhost:8000/ttt", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Translation failed");
+      }
+
+      setTranslatedText(data.output || "No translation received.");
+    } catch (error: any) {
+      console.error("Translation error:", error);
+      alert("Translation failed. Please try again.");
+    } finally {
+      setTranslating(false);
+    }
+  };
+
+
   return (
     <>
       <div
@@ -213,10 +310,10 @@ export function ResultsModal({
         style={{ overscrollBehavior: "contain" }}
       >
         <div
-          className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col border border-gray-300"
+          className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col border border-gray-300"
           onClick={(e) => e.stopPropagation()} // FIX: Prevent click propagation
         >
-          <div className="sticky top-0 bg-black px-6 py-4 flex items-center justify-between border-b border-gray-700 flex-shrink-0">
+          <div className="sticky top-0 rounded-2xl bg-black px-6 py-4 flex items-center justify-between border-b border-gray-700 flex-shrink-0">
             <div>
               <h2 className="text-2xl font-bold text-white">Medical Analysis Results</h2>
               <p className="text-gray-300 text-sm mt-1">Analysis for {userName}</p>
@@ -316,7 +413,7 @@ export function ResultsModal({
                   <div className="p-6 bg-white border border-gray-300 rounded-lg">
                     <div
                       className="text-gray-800 leading-relaxed text-lg prose prose-lg max-w-none"
-                      dangerouslySetInnerHTML={renderMarkdown(simplifiedContent.originalDiagnosisMarkdown)}
+                      dangerouslySetInnerHTML={renderMarkdown(simplifiedContent.simplified)}
                     />
                   </div>
                 ) : (
@@ -376,6 +473,36 @@ export function ResultsModal({
                     </p>
                   </div>
                 )}
+              </div>
+            )}
+
+            {result?.guardrails && (
+              <div className="bg-gray-50 border border-gray-300 rounded-lg p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Guardrails Quality Evaluation</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {Object.entries(result.guardrails || {}).map(([key, value]: [string, any]) => {
+                    const passed = !!(value && value.passed);
+                    const score = value?.score ?? 0;
+                    return (
+                      <div
+                        key={key}
+                        className={`rounded-lg border-2 p-4 transition-colors ${
+                          passed ? "border-green-500 bg-green-50" : "border-red-400 bg-red-50"
+                        }`}
+                      >
+                        <h4 className="text-lg font-semibold capitalize text-gray-900 mb-2">
+                          {key} Check
+                        </h4>
+                        <p className="text-gray-800 font-medium">
+                          Score: <span className="font-bold">{score}</span> / 10
+                        </p>
+                        <p className={`mt-1 font-semibold ${passed ? "text-green-700" : "text-red-700"}`}>
+                          {passed ? "✅ Passed" : "❌ Failed"}
+                        </p>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             )}
 
@@ -456,13 +583,105 @@ export function ResultsModal({
             )}
           </div>
 
-          <div className="sticky bottom-0 bg-gray-100 border-t border-gray-300 px-6 py-4 flex gap-3 justify-end flex-shrink-0">
+          {showTranslate && (
+            <div className="bg-gray-50 border-t border-gray-300 p-6 animate-fadeIn">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Know in your own language</h3>
+              <div className="flex flex-wrap items-center gap-4 mb-4">
+                <select
+                  value={selectedLang}
+                  onChange={(e) => setSelectedLang(e.target.value)}
+                  className="border border-gray-400 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-black"
+                >
+                  <option value="">Select Language</option>
+                  <option value="hin">Hindi (hin)</option>
+                  <option value="tel">Telugu (tel)</option>
+                  <option value="more">More coming soon...</option>
+                </select>
+
+                <button
+                  onClick={handleTranslate}
+                  disabled={!selectedLang || translating}
+                  className="inline-flex items-center gap-2 rounded-lg bg-black px-5 py-2 text-white font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {translating ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Translating...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v14m7-7H5" />
+                      </svg>
+                      Translate
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {translatedText && (
+                <div className="p-4 bg-white border border-gray-300 rounded-lg">
+                  <h4 className="font-semibold text-gray-900 mb-2">
+                    Translated Text ({selectedLang.toUpperCase()}):
+                  </h4>
+                  <p className="text-gray-800 whitespace-pre-line">{translatedText}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="sticky bottom-0 rounded-2xl bg-gray-100 border-t border-gray-300 px-6 py-4 flex gap-3 justify-end flex-shrink-0">
+            <button
+              onClick={() => setShowTranslate(!showTranslate)}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-gray-800 font-semibold hover:bg-gray-200 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m0 4v2m0 4v2m0 4v2M3 15h12" />
+              </svg>
+              Translate
+            </button>
+
             <button
               onClick={handleClose}
               className="px-6 py-2 rounded-lg border border-gray-400 text-gray-800 font-semibold hover:bg-gray-200 transition-colors"
             >
               Close
             </button>
+
+            <button
+              onClick={handleDownloadReport}
+              className="inline-flex items-center gap-3 rounded-lg bg-gray-900 px-6 py-2 text-white font-semibold hover:bg-gray-800 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"
+                />
+              </svg>
+              Download Report
+            </button>
+
             <button
               onClick={onNavigateToChat}
               className="inline-flex items-center gap-3 rounded-lg bg-black px-6 py-2 text-white font-semibold hover:bg-gray-800 transition-colors"
