@@ -42,6 +42,8 @@ export default function MedicalQueryForm() {
   const [savedResults, setSavedResults] = useState<any>(null)
   const [showSavedResultsButton, setShowSavedResultsButton] = useState(false)
 
+  const [uploadingXray, setUploadingXray] = useState(false);
+
   const [previousPatientReport] = useState<any>(null)
   const [previousPatientName] = useState<string>("")
 
@@ -68,6 +70,8 @@ export default function MedicalQueryForm() {
   const [savingOutcome, setSavingOutcome] = useState(false)
 
   const [autoSubmitted, setAutoSubmitted] = useState(false)
+
+  const [uploadingAudio, setUploadingAudio] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -839,15 +843,61 @@ export default function MedicalQueryForm() {
                 disabled={loading}
               />
 
-              {/* <div className="flex justify-end mt-4">
+              <div className="flex justify-end gap-5 mt-4">
+
+                <label
+                  htmlFor="xrayUpload"
+                  className={`cursor-pointer inline-flex items-center gap-2 rounded-lg ${
+                    uploadingXray ? "bg-gray-500" : "bg-gray-800"
+                  } px-4 py-2 text-white font-semibold hover:bg-gray-700 transition-colors shadow-sm ${
+                    uploadingXray ? "pointer-events-none opacity-70" : ""
+                  }`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  {uploadingXray ? "Analyzing X-ray..." : "Upload X-ray"}
+                </label>
+
+                <input
+                  id="xrayUpload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    if (!e.target.files?.[0]) return;
+                    setUploadingXray(true);
+                    const formData = new FormData();
+                    formData.append("image", e.target.files[0]);
+                    try {
+                      const res = await fetch("http://localhost:8000/xray", {
+                        method: "POST",
+                        body: formData,
+                      });
+                      if (!res.ok) throw new Error("X-ray processing failed");
+                      const data = await res.json();
+                      if (data?.output) if (data?.output) setDisease(prev => (prev ? prev + " " + data.output : data.output));
+                    } catch (err) {
+                      console.error(err);
+                      alert("Error processing X-ray");
+                    } finally {
+                      setUploadingXray(false);
+                    }
+                  }}
+                />
+
                 <label
                   htmlFor="audioUpload"
-                  className={`cursor-pointer inline-flex items-center gap-2 rounded-lg bg-gray-800 px-4 py-2 text-white font-semibold hover:bg-gray-700 transition-colors shadow-sm ${loading ? "opacity-60 pointer-events-none" : ""}`}
+                  className={`cursor-pointer inline-flex items-center gap-2 rounded-lg ${
+                    uploadingAudio ? "bg-gray-500" : "bg-gray-800"
+                  } px-4 py-2 text-white font-semibold hover:bg-gray-700 transition-colors shadow-sm ${
+                    uploadingAudio ? "pointer-events-none opacity-70" : ""
+                  }`}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6l4 2" />
                   </svg>
-                  Upload Audio
+                  {uploadingAudio ? "Uploading..." : "Upload Audio"}
                 </label>
 
                 <input
@@ -857,26 +907,29 @@ export default function MedicalQueryForm() {
                   className="hidden"
                   onChange = {async (e) => {
                     if (!e.target.files?.[0]) return;
-                    setLoading(true);
+                    setUploadingAudio(true);
                     const formData = new FormData();
                     formData.append("audio", e.target.files[0]);
+                    formData.append("src","eng");
+                    formData.append("tgt","eng");
                     try {
-                      const res = await fetch("http://localhost:5000/api/stt-and-classify", {
+                      const res = await fetch("http://localhost:8000/stt", {
                         method: "POST",
                         body: formData,
                       });
                       if (!res.ok) throw new Error("Audio processing failed");
                       const data = await res.json();
-                      if (data?.text) setDisease(data.text);
+                      console.log(data);
+                      if (data?.output) setDisease(data.output);
                     } catch (err) {
                       console.error(err);
                       alert("Error processing audio");
                     } finally {
-                      setLoading(false);
+                      setUploadingAudio(false);
                     }
                   }}
                 />
-              </div> */}
+              </div>
             </div>
           </div>
 
