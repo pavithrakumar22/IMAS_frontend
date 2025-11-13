@@ -1,26 +1,27 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 const isProtectedRoute = createRouteMatcher([
   "/dashboard(.*)",
-  // Add other protected routes here
+  "/role-select",
+  "/interview(.*)",
+  "/chat(.*)",
+  "/chat/doubt",
 ]);
 
-export default clerkMiddleware((auth, request) => {
-  if (isProtectedRoute(request)) {
-    // Protect the route and let Clerk handle the response
-    auth().protect();
+export default clerkMiddleware(async (auth, request) => {
+  const { userId } = await auth();
+
+  if (!userId && isProtectedRoute(request)) {
+    return NextResponse.redirect(new URL('/sign-in', request.url));
   }
-  
-  // For all other cases, continue with the response
+
   return NextResponse.next();
 });
 
 export const config = {
   matcher: [
-    // Match all routes except static files and _next internals
     "/((?!_next/static|_next/image|favicon.ico).*)",
-    // Include API routes if needed
     "/(api|trpc)(.*)",
   ],
 };
