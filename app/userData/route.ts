@@ -91,10 +91,14 @@ export async function GET() {
         complexity: formatComplexity(primaryDisease?.complexity),
         status: getStatusFromOutcome(primaryDisease?.outcome),
         time: formatTimeAgo(primaryDisease?.treatmentDate || patient.LasttreatmentDate),
-        outcome: formatOutcome(primaryDisease?.outcome),
+        outcome: primaryDisease?.outcome || patient.Lastoutcome || "ongoing",
         age: patient.age,
-        gender: patient.gender || "Not specified", // Add gender field
-        treatmentDate: formatDate(primaryDisease?.treatmentDate || patient.LasttreatmentDate)
+        gender: patient.gender || "Not specified",
+        treatmentDate: formatDate(primaryDisease?.treatmentDate || patient.LasttreatmentDate),
+        // ADD THESE REQUIRED FIELDS:
+        clerkUserId: user.clerkUserId,
+        patientId: patient.patientId,
+        diseaseIndex: patient.diseases && patient.diseases.length > 0 ? patient.diseases.length - 1 : 0
       };
     });
 
@@ -115,9 +119,10 @@ export async function GET() {
         summary: `${primaryDisease?.name || "Condition"} - ${primaryDisease?.diagnosis?.substring(0, 50) || "No diagnosis"}...`,
         outcome: formatOutcome(primaryDisease?.outcome),
         complexity: formatComplexity(primaryDisease?.complexity),
-        gender: patient.gender || "Not specified" // Add gender field
+        gender: patient.gender || "Not specified"
       };
     });
+
     const payload = {
       stats: {
         patientsCured: patientsCured,
@@ -144,7 +149,7 @@ export async function GET() {
         id: patient.patientId,
         name: patient.name,
         age: patient.age,
-        gender: patient.gender || "Not specified", // Add gender field
+        gender: patient.gender || "Not specified",
         disease: patient.Lastdisease || "Not specified",
         diagnosis: patient.Lastdiagnosis || "Pending",
         lastVisit: formatDate(patient.LasttreatmentDate),

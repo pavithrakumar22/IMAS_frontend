@@ -9,6 +9,12 @@ export type CaseItem = {
   complexity: "Low" | "Medium" | "High"
   status: "Resolved" | "Escalated" | "In Progress"
   time: string
+  outcome: string
+  age?: number
+  gender?: string
+  clerkUserId: string
+  patientId: string
+  diseaseIndex: number
 }
 
 export type HistoryRow = {
@@ -44,7 +50,6 @@ export type UserData = {
   patients: PatientRow[]
 }
 
-// Sample fallback data (current UI placeholders)
 const SAMPLE_DATA: UserData = {
   stats: {
     patientsCured: 248,
@@ -59,6 +64,10 @@ const SAMPLE_DATA: UserData = {
       complexity: "Low",
       status: "Resolved",
       time: "2 hours ago",
+      outcome: "cured",
+      clerkUserId: "user_2sample1",
+      patientId: "PAT1701234567890ABC123",
+      diseaseIndex: 0
     },
     {
       id: "CASE-002",
@@ -67,6 +76,10 @@ const SAMPLE_DATA: UserData = {
       complexity: "High",
       status: "Escalated",
       time: "4 hours ago",
+      outcome: "referred",
+      clerkUserId: "user_2sample1",
+      patientId: "PAT1701234567890DEF456",
+      diseaseIndex: 0
     },
     {
       id: "CASE-003",
@@ -75,6 +88,10 @@ const SAMPLE_DATA: UserData = {
       complexity: "Medium",
       status: "In Progress",
       time: "6 hours ago",
+      outcome: "ongoing",
+      clerkUserId: "user_2sample1",
+      patientId: "PAT1701234567890GHI789",
+      diseaseIndex: 0
     },
   ],
   overallHistory: [
@@ -107,7 +124,6 @@ export function useUserData() {
     revalidateOnFocus: false,
   })
 
-  // Fallback to sample if error or missing data
   const safeData = data && !error ? data : SAMPLE_DATA
   return {
     data: safeData,
