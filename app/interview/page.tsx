@@ -1,6 +1,7 @@
+ 
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useUser } from "@clerk/nextjs"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -20,8 +21,8 @@ export default function InterviewPage() {
   const { user: clerkUser } = useUser()
 
   const [step, setStep] = useState<Step>("profile")
-  const [profile, setProfile] = useState<ProfileData | null>(null)
-  const [answers, setAnswers] = useState<AnswerRecord[]>([])
+  const [, setProfile] = useState<ProfileData | null>(null)
+  const [, setAnswers] = useState<AnswerRecord[]>([])
   const [sessionId, setSessionId] = useState<string>("")
   const [result, setResult] = useState<{
     score: number;
@@ -128,12 +129,11 @@ export default function InterviewPage() {
         throw new Error(`Failed to update user profile: ${updateResponse.status}`)
       }
 
-      const result = await updateResponse.json()
       setProfile(data)
       setStep("questions")
     } catch (error) {
       console.error("Error updating profile:", error)
-      alert(`Failed to save profile: ${error.message}`)
+      alert(`Failed to save profile`)
     }
   }
 
