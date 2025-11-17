@@ -28,10 +28,8 @@ export default function SignUpPage() {
         </div>
       </header>
 
-      {/* Main Content */}
       <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
-          {/* Welcome Message */}
           <div className="text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Join IMAS</h2>
             <p className="text-gray-600 mb-8">
@@ -39,7 +37,6 @@ export default function SignUpPage() {
             </p>
           </div>
 
-          {/* Clerk Sign Up Component */}
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <SignUp
               appearance={{
@@ -55,12 +52,11 @@ export default function SignUpPage() {
                   footerActionLink: "text-blue-600 hover:text-blue-700",
                 },
               }}
-              redirectUrl="/dashboard"
+              redirectUrl="/role-select"
               signInUrl="/sign-in"
             />
           </div>
 
-          {/* Benefits */}
           <div className="bg-white rounded-xl shadow-lg p-6 mt-8">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Why join IMAS?</h3>
             <div className="space-y-3">
@@ -99,7 +95,6 @@ export default function SignUpPage() {
         </div>
       </div>
 
-      {/* Footer */}
       <footer className="bg-gray-900 text-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-gray-400">© 2024 IMAS. Empowering rural healthcare with AI.</p>
